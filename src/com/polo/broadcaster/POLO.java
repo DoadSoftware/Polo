@@ -24,8 +24,6 @@ import com.polo.util.PoloUtil;
 
 import net.sf.json.JSONArray;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 public class POLO extends Scene{
 	
 	public String session_selected_broadcaster = "HOCKEY_KHELO_INDIA";
@@ -35,7 +33,6 @@ public class POLO extends Scene{
 	public String which_graphics_onscreen = "";
 	public boolean is_infobar = false;
 	private String logo_path = "C:\\Images\\KHELO_INDIA\\Logos\\";
-	private String colors_path = "C:\\Images\\KHELO_INDIA\\Colours\\";
 	private String icon_path = "D:\\DOAD_In_House_Everest\\Everest_Sports\\Everest_Khelo_India_2023\\Icons\\";
 	private String status;
 	private String slashOrDash = "-";
@@ -639,17 +636,6 @@ public class POLO extends Scene{
 				break;
 			case "PLAYER_TODAY_GOAL":
 				int player_goal_count=0;
-				for(MatchStats ms : match.getMatchStats()) {
-					if(ms.getStats_type().equalsIgnoreCase("goal")) {
-						if(ms.getPlayerId() == playerId) {
-							player_goal_count = player_goal_count + 1;
-						}
-					}else if(ms.getStats_type().equalsIgnoreCase("penalty")) {
-						if(ms.getPlayerId() == playerId) {
-							player_goal_count = player_goal_count + 1;
-						}
-					}
-				}
 				if(player_goal_count != 0) {
 					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tDetails " + "GOALS TODAY - " + player_goal_count + ";");
 					TimeUnit.MILLISECONDS.sleep(l);
@@ -830,18 +816,6 @@ public class POLO extends Scene{
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHeader " + "SUBSTITUTIONS" + ";");
 			TimeUnit.MILLISECONDS.sleep(l);
 			
-			for(int i = 0; i<=match.getEvents().size()-1; i++) { 
-				if(match.getEvents().get(i).getEventType().equalsIgnoreCase("replace")) {
-					if(Team_id ==plyr.get(match.getEvents().get(i).getOnPlayerId()-1).getTeamId()) {
-						if(match.getHomeTeamId() == plyr.get(match.getEvents().get(i).getOnPlayerId()-1).getTeamId()) {
-							evnt.add(match.getEvents().get(i)); 
-						}else if(match.getAwayTeamId() == plyr.get(match.getEvents().get(i).getOnPlayerId()-1).getTeamId()) {
-							evnt.add(match.getEvents().get(i)); 
-						} 
-					} 
-				}
-			}
-			
 			switch(Num_Of_Subs.toUpperCase())
 			{
 			case "SINGLE":
@@ -940,18 +914,6 @@ public class POLO extends Scene{
 					PoloUtil.PNG_EXTENSION + ";");
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHeader " + "SUBSTITUTIONS" + ";");
 			TimeUnit.MILLISECONDS.sleep(l);
-			
-			for(int i = 0; i<=match.getEvents().size()-1; i++) { 
-				if(match.getEvents().get(i).getEventType().equalsIgnoreCase("replace")) {
-					if(Team_id ==plyr.get(match.getEvents().get(i).getOnPlayerId()-1).getTeamId()) {
-						if(match.getHomeTeamId() == plyr.get(match.getEvents().get(i).getOnPlayerId()-1).getTeamId()) {
-							evnt.add(match.getEvents().get(i)); 
-						}else if(match.getAwayTeamId() == plyr.get(match.getEvents().get(i).getOnPlayerId()-1).getTeamId()) {
-							evnt.add(match.getEvents().get(i)); 
-						} 
-					} 
-				}
-			}
 			
 			//print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET vNumberOfIn 0;");
 			//TimeUnit.MILLISECONDS.sleep(l);
@@ -1211,77 +1173,6 @@ public class POLO extends Scene{
 			
 			List<String> home_stats = new ArrayList<String>();
 			List<String> away_stats = new ArrayList<String>();
-			List<Integer> plyr_ids = new ArrayList<Integer>();
-			boolean plyr_exist = false;
- 			String stats_txt = "",stats_txt_og = "";
-			
-			for(int i=0; i<=match.getMatchStats().size()-1; i++) {
-				
-				if((match.getMatchStats().get(i).getStats_type().equalsIgnoreCase(PoloUtil.GOAL) 
-						|| match.getMatchStats().get(i).getStats_type().equalsIgnoreCase(PoloUtil.PENALTY))) {
-					
-					plyr_exist = false;
-					for(Integer plyr_id : plyr_ids) {
-						if(match.getMatchStats().get(i).getPlayerId() == plyr_id && 
-								(match.getMatchStats().get(i).getStats_type().equalsIgnoreCase(PoloUtil.GOAL) 
-										|| match.getMatchStats().get(i).getStats_type().equalsIgnoreCase(PoloUtil.OWN_GOAL)
-										|| match.getMatchStats().get(i).getStats_type().equalsIgnoreCase(PoloUtil.PENALTY))) {
-							plyr_exist = true;
-							break;
-						}
-					}
-
-					if(plyr_exist == false) {
-						plyr_ids.add(match.getMatchStats().get(i).getPlayerId());
-						stats_txt = hockeyService.getPlayer(PoloUtil.PLAYER, 
-							String.valueOf(match.getMatchStats().get(i).getPlayerId())).getTicker_name().toUpperCase()+ " " + 
-							PoloFunctions.calExtraTimeGoal(match.getMatchStats().get(i).getMatchHalves(),match.getMatchStats().get(i).getTotalMatchSeconds()) + 
-								PoloFunctions.goal_shortname(match.getMatchStats().get(i).getStats_type());
-						
-						for(int j=i+1; j<=match.getMatchStats().size()-1; j++) {
-							if (match.getMatchStats().get(i).getPlayerId() == match.getMatchStats().get(j).getPlayerId()
-								&& (match.getMatchStats().get(j).getStats_type().equalsIgnoreCase(PoloUtil.GOAL)
-								|| match.getMatchStats().get(j).getStats_type().equalsIgnoreCase(PoloUtil.PENALTY))) {
-
-								stats_txt = stats_txt + "," + 
-										PoloFunctions.calExtraTimeGoal(match.getMatchStats().get(j).getMatchHalves(), match.getMatchStats().get(j).getTotalMatchSeconds()) 
-										+ PoloFunctions.goal_shortname(match.getMatchStats().get(j).getStats_type());
-							}
-						}
-						switch (PoloFunctions.getPlayerSquadType(match.getMatchStats().get(i).getPlayerId(),match.getMatchStats().get(i).getStats_type() ,match)) {
-						case PoloUtil.HOME:
-							home_stats.add(stats_txt);
-							break;
-						case PoloUtil.AWAY:
-							away_stats.add(stats_txt);
-							break;
-						}
-					}
-				}else if(match.getMatchStats().get(i).getStats_type().equalsIgnoreCase(PoloUtil.OWN_GOAL)) {
-					stats_txt_og = hockeyService.getPlayer(PoloUtil.PLAYER, 
-							String.valueOf(match.getMatchStats().get(i).getPlayerId())).getTicker_name().toUpperCase()+ " " + 
-							PoloFunctions.calExtraTimeGoal(match.getMatchStats().get(i).getMatchHalves(),match.getMatchStats().get(i).getTotalMatchSeconds()) + 
-							PoloFunctions.goal_shortname(match.getMatchStats().get(i).getStats_type());
-						
-						/*for(int j=i+1; j<=match.getMatchStats().size()-1; j++) {
-							if (match.getMatchStats().get(i).getPlayerId() == match.getMatchStats().get(j).getPlayerId()
-								&& (match.getMatchStats().get(i).getStats_type().equalsIgnoreCase(HockeyUtil.OWN_GOAL))) {
-
-								stats_txt_og = stats_txt_og + "," + 
-									FootballFunctions.calExtraTimeGoal(match.getMatchStats().get(j).getMatchHalves(), match.getMatchStats().get(j).getTotalMatchSeconds()) 
-										+ FootballFunctions.goal_shortname(match.getMatchStats().get(j).getStats_type());
-							}
-						}*/
-						switch (PoloFunctions.getPlayerSquadType(match.getMatchStats().get(i).getPlayerId(),match.getMatchStats().get(i).getStats_type() ,match)) {
-						case PoloUtil.HOME:
-							home_stats.add(stats_txt_og);
-							break;
-						case PoloUtil.AWAY:
-							away_stats.add(stats_txt_og);
-							break;
-						}
-				}
-			}
 			
 			for(int i=0;i<=home_stats.size()-1;i++) {
 				if(i < 2) { 

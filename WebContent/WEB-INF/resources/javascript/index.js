@@ -282,15 +282,10 @@ function processUserSelection(whichInput)
 		$('#selected_player_id').val(whichInput.value);
 		document.getElementById('select_event_div').style.display = '';
 		break;
-	case 'log_teams_score_overwrite_btn': case 'log_match_stats_overwrite_btn': case 'log_match_subs_overwrite_btn':
+		
+	case 'log_match_subs_overwrite_btn':
 		processWaitingButtonSpinner('START_WAIT_TIMER');
 		switch ($(whichInput).attr('name')) {
-		case 'log_teams_score_overwrite_btn': 
-			processPoloProcedures('LOG_OVERWRITE_TEAM_SCORE',whichInput);
-			break;
-		case 'log_match_stats_overwrite_btn':
-			processPoloProcedures('LOG_OVERWRITE_MATCH_STATS',whichInput);
-			break;
 		case 'log_match_subs_overwrite_btn':
 			processPoloProcedures('LOG_OVERWRITE_MATCH_SUBS',whichInput);
 			break;
@@ -560,8 +555,15 @@ function processUserSelection(whichInput)
 	case 'populate_extra_time_both_btn':
 		processPoloProcedures('POPULATE-EXTRA_TIME_BOTH');
 		break;
+	case 'homeScore': case 'awayScore':
+		processPoloProcedures('UPDATE_SCORE_USING_TXT',"");
+		break;
+		
 	default:
 		switch ($(whichInput).attr('id')) {
+		case 'home_increment_score_btn': case 'away_increment_score_btn': case 'home_decrement_score_btn': case 'away_decrement_score_btn':
+			processPoloProcedures('LOG_GOALS',whichInput);
+			break;
 		case 'overwrite_teams_total': case 'overwrite_match_time': 
 			addItemsToList('LOAD_' + $(whichInput).attr('id').toUpperCase(),null);
 			document.getElementById('select_event_div').style.display = '';
@@ -608,26 +610,22 @@ function processPoloProcedures(whatToProcess, whichInput)
 		valueToProcess = $('#matchFileTimeStamp').val();
 		//alert("1");
 		break;
-	case 'LOG_STAT':
+			
+	case 'UPDATE_SCORE_USING_TXT':
+		value_to_process = document.getElementById("homeScore").value + "-" + document.getElementById("awayScore").value;
+		break;
+			
+	case 'LOG_STAT': case 'LOG_GOALS':
 		value_to_process = whichInput.id;
 		break;
-	case 'LOG_OVERWRITE_TEAM_SCORE': case 'LOG_OVERWRITE_MATCH_STATS': case 'LOG_OVERWRITE_MATCH_SUBS': 
+	case 'LOG_OVERWRITE_MATCH_SUBS': 
 		switch (whatToProcess) {
-		case 'LOG_OVERWRITE_TEAM_SCORE':
-			value_to_process = $('#overwrite_home_team_score').val() + ',' + $('#overwrite_away_team_score').val();
-			break;
-		case 'LOG_OVERWRITE_MATCH_STATS':
-			value_to_process = $('#overwrite_match_stats_index option:selected').val() 
-				+ ',' + $('#overwrite_match_stats_player_id option:selected').val()+ ',' + $('#overwrite_match_stats_type option:selected').val()
-				+ ',' + $('#overwrite_match_stats_total_seconds').val();
-			break;
 		case 'LOG_OVERWRITE_MATCH_SUBS':
 			value_to_process = $('#overwrite_match_sub_index option:selected').val() + ',' + $('#overwrite_match_player_id option:selected').val()
 				+ ',' + $('#overwrite_match_subs_player_id option:selected').val();
 			break;
 		}
-		break;
-		
+		break;	
 	case 'LOAD_TEAMS':
 		value_to_process = $('#homeTeamId option:selected').val() + ',' + $('#awayTeamId option:selected').val();
 		break;
@@ -1229,35 +1227,7 @@ function processPoloProcedures(whatToProcess, whichInput)
 			value_to_process = '/Default/LT';
 			break;
 		}
-		break;	
-	case 'HOME_GOAL':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE': case 'SANTOSH_TROPHY': case 'VIZ_TRI_NATION': case 'SUPER_CUP': case 'CONTINENTAL':
-			value_to_process = 'HOME_GOAL';
-			break;
-		}
-		break;
-	case 'AWAY_GOAL':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE': case 'SANTOSH_TROPHY': case 'VIZ_TRI_NATION': case 'SUPER_CUP': case 'CONTINENTAL':
-			value_to_process = 'AWAY_GOAL';
-			break;
-		}
-		break;
-	case 'HOME_UNDO': case 'SANTOSH_TROPHY': case 'VIZ_TRI_NATION': case 'SUPER_CUP': case 'CONTINENTAL':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE': case 'VIZ_TRI_NATION':
-			value_to_process = 'HOME_UNDO';
-			break;
-		}
-		break;
-	case 'AWAY_UNDO': 
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE': case 'SANTOSH_TROPHY': case 'VIZ_TRI_NATION': case 'SUPER_CUP': case 'CONTINENTAL':
-			value_to_process = 'AWAY_UNDO';
-			break;
-		}
-		break;	
+		break;		
 	}
 	
 	if(match_data){
@@ -1472,18 +1442,15 @@ function processPoloProcedures(whatToProcess, whichInput)
 				break;
 			case 'APIDATA_GRAPHICS-OPTIONS':
 				addItemsToList('APIDATA-OPTIONS',data);				
-				break;				
-    		case 'LOG_OVERWRITE_TEAM_SCORE': case 'LOG_OVERWRITE_MATCH_STATS': case 'LOG_OVERWRITE_MATCH_SUBS': 
-    		case 'UNDO': case 'REPLACE': case 'HOME_UNDO': case 'AWAY_UNDO':
+				break;
+								
+    		case 'LOG_OVERWRITE_MATCH_SUBS': case 'UNDO': case 'REPLACE': case 'LOG_GOALS': case 'UPDATE_SCORE_USING_TXT':
         		addItemsToList('LOAD_MATCH',data);
 				addItemsToList('LOAD_EVENTS',data);
 				document.getElementById('select_event_div').style.display = 'none';
         		break;
         	case 'LOAD_TEAMS':
         		addItemsToList('LOAD_TEAMS',data);
-        		break;
-        	case 'HOME_GOAL': case 'AWAY_GOAL':
-        		addItemsToList('LOAD_MATCH',data);
         		break;	
 			case 'LOG_EVENT': case 'LOAD_MATCH':
         		addItemsToList('LOAD_MATCH',data);
@@ -3490,76 +3457,6 @@ function addItemsToList(whatToProcess, dataToProcess)
 		}
 		break;
 	
-	case 'LOAD_OVERWRITE_TEAMS_SCORE':
-
-		$('#select_event_div').empty();
-
-		table = document.createElement('table');
-		table.setAttribute('class', 'table table-bordered');
-				
-		tbody = document.createElement('tbody');
-		row = tbody.insertRow(tbody.rows.length);
-		
-		max_cols = 1;
-		for(var i=0; i<=max_cols; i++) {
-			
-		    option = document.createElement('input');
-		    option.type = 'text';
-		    header_text = document.createElement('label');
-
-			switch (whatToProcess) {
-			case 'LOAD_OVERWRITE_TEAMS_SCORE':
-				switch(i) {
-				case 0:
-					header_text.innerHTML = match_data.homeTeam.teamName4 + ' Score';
-					option.id = 'overwrite_home_team_score';
-					option.value = match_data.homeTeamScore;
-					break;
-				case 1:
-					header_text.innerHTML = match_data.awayTeam.teamName4 + ' Score';
-					option.id = 'overwrite_away_team_score';
-					option.value = match_data.awayTeamScore;
-					break;
-				}
-				break;
-			}
-			
-			header_text.htmlFor = option.id;
-			row.insertCell(i).appendChild(header_text).appendChild(option);
-		}
-
-	    option = document.createElement('input');
-	    option.type = 'button';
-		switch (whatToProcess) {
-		case 'LOAD_OVERWRITE_TEAMS_SCORE':
-		    option.name = 'log_teams_score_overwrite_btn';
-		    option.value = 'Log Team Score Overwrite';
-			break;
-		}
-	    option.id = option.name;
-	    option.setAttribute('onclick','processUserSelection(this);');
-	    
-	    div = document.createElement('div');
-	    div.append(option);
-
-		option = document.createElement('input');
-		option.type = 'button';
-		option.name = 'cancel_overwrite_btn';
-		option.id = option.name;
-		option.value = 'Cancel';
-		option.setAttribute('onclick','processUserSelection(this)');
-
-	    div.append(document.createElement('br'));
-	    div.append(option);
-	    
-	    max_cols = max_cols + 1;
-	    row.insertCell(max_cols).appendChild(div);
-
-		table.appendChild(tbody);
-		document.getElementById('select_event_div').appendChild(table);
-		
-		break;
-	
 	case 'LOAD_OVERWRITE_MATCH_SUB':
 		$('#select_event_div').empty();
 
@@ -3668,136 +3565,7 @@ function addItemsToList(whatToProcess, dataToProcess)
 		table.appendChild(tbody);
 		document.getElementById('select_event_div').appendChild(table);
 		break;
-		
-	case 'LOAD_OVERWRITE_MATCH_STATS':
-
-		$('#select_event_div').empty();
-
-		table = document.createElement('table');
-		table.setAttribute('class', 'table table-bordered');
-				
-		tbody = document.createElement('tbody');
-		row = tbody.insertRow(tbody.rows.length);
-
-		select = document.createElement('select');
-		select.style = 'width:75%';
-		select.id = 'overwrite_match_stats_index';
-		select.name = select.id;
-		select.setAttribute('onchange',"processUserSelection(this)");
-		
-		match_data.matchStats.forEach(function(ms,index,arr){
-			option = document.createElement('option');
-			option.value = ms.statsId;
-		    option.text = ms.stats_type;
-			if(ms.player.full_name) {
-			    option.text = option.text + ' (' + ms.player.full_name + ')';
-			}
-		    option.text = option.text + ' [' + ms.totalMatchSeconds + ']';
-		    select.appendChild(option);
-		});
-	    header_text = document.createElement('label');
-		header_text.innerHTML = 'Stats';
-		header_text.htmlFor = select.id;
-		row.insertCell(0).appendChild(header_text).appendChild(select);
-
-		select = document.createElement('select');
-		select.style = 'width:75%';
-		select.id = 'overwrite_match_stats_player_id';
-
-		match_data.homeSquad.forEach(function(hp,index,arr){
-			option = document.createElement('option');
-			option.value = hp.playerId;
-		    option.text = hp.jersey_number + ' - ' + hp.full_name + ' ('+ match_data.homeTeam.teamName4 +')';
-		    select.appendChild(option);
-		});
-		match_data.homeSubstitutes.forEach(function(hsub,index,arr){
-			option = document.createElement('option');
-			option.value = hsub.playerId;
-		    option.text = hsub.jersey_number + ' - ' + hsub.full_name + ' ('+ match_data.homeTeam.teamName4 +') - Sub';
-		    select.appendChild(option);
-		});
-		match_data.awaySquad.forEach(function(as,index,arr){
-			option = document.createElement('option');
-			option.value = as.playerId;
-		    option.text = as.jersey_number + ' - ' + as.full_name + ' ('+ match_data.awayTeam.teamName4 +')';
-		    select.appendChild(option);
-		});
-		match_data.awaySubstitutes.forEach(function(asub,index,arr){
-			option = document.createElement('option');
-			option.value = asub.playerId;
-		    option.text = asub.jersey_number + ' - ' + asub.full_name + ' ('+ match_data.awayTeam.teamName4 +') - Sub';
-		    select.appendChild(option);
-		});
-		
-
-	    header_text = document.createElement('label');
-		header_text.innerHTML = 'Player';
-		header_text.htmlFor = select.id;
-		row.insertCell(1).appendChild(header_text).appendChild(select);
-		
-		select = document.createElement('select');
-		select.style = 'width:75%';
-		select.id = 'overwrite_match_stats_type';
-	    
-	    option = document.createElement('option');
-		option.value = 'goal';
-	    option.text = 'Goal';
-	    select.appendChild(option);
-	    
-	    option = document.createElement('option');
-		option.value = 'own_goal';
-	    option.text = 'Own Goal';
-	    select.appendChild(option);
-		    
-		option = document.createElement('option');
-		option.value = 'penalty';
-	    option.text = 'Penalty';
-	    select.appendChild(option);
-		
-		header_text = document.createElement('label');
-		header_text.innerHTML = 'Type';
-		header_text.htmlFor = option.id;
-		row.insertCell(2).appendChild(header_text).appendChild(select);
-		
-		match_data.matchStats.forEach(function(ms,index,arr){
-			option = document.createElement('input');
-			option.type = "text";
-			option.id = 'overwrite_match_stats_total_seconds';
-			option.value = ms.totalMatchSeconds;
-		});
-		
-		header_text = document.createElement('label');
-		header_text.innerHTML = 'Time';
-		header_text.htmlFor = option.id;
-		row.insertCell(3).appendChild(header_text).appendChild(option);
-
-	    option = document.createElement('input');
-	    option.type = 'button';
-	    option.name = 'log_match_stats_overwrite_btn';
-	    option.value = 'Log Match Stats Overwrite';
-	    option.id = option.name;
-	    option.setAttribute('onclick','processUserSelection(this);');
-	    
-	    div = document.createElement('div');
-	    div.append(option);
-
-		option = document.createElement('input');
-		option.type = 'button';
-		option.name = 'cancel_overwrite_btn';
-		option.id = option.name;
-		option.value = 'Cancel';
-		option.setAttribute('onclick','processUserSelection(this)');
-
-	    div.append(document.createElement('br'));
-	    div.append(option);
-	    
-	    row.insertCell(4).appendChild(div);
-
-		table.appendChild(tbody);
-		document.getElementById('select_event_div').appendChild(table);
-		
-		break;		
-		
+			
 	case 'LOAD_TEAMS':
 
 		//var otherSquadWithoutSubs, player_ids;
@@ -3844,9 +3612,9 @@ function addItemsToList(whatToProcess, dataToProcess)
 			table.appendChild(thead);
 
 			tbody = document.createElement('tbody');
-			max_cols = parseInt(10 + parseInt($('#homeSubstitutesPerTeam option:selected').val()));
+			max_cols = parseInt(3 + parseInt($('#homeSubstitutesPerTeam option:selected').val()));
 			if(parseInt($('#homeSubstitutesPerTeam option:selected').val()) < parseInt($('#awaySubstitutesPerTeam option:selected').val())) {
-				max_cols = parseInt(10 + parseInt($('#awaySubstitutesPerTeam option:selected').val()));
+				max_cols = parseInt(3 + parseInt($('#awaySubstitutesPerTeam option:selected').val()));
 			}
 
 			for(var i=0; i <= max_cols; i++) {
@@ -4306,7 +4074,7 @@ function addItemsToList(whatToProcess, dataToProcess)
 		for(var iRow=0;iRow<=0;iRow++) {
 			
 			row = tbody.insertRow(tbody.rows.length);
-			max_cols = 5;
+			max_cols = 4;
 			
 			for(var iCol=0;iCol<=max_cols;iCol++) {
 				
@@ -4320,31 +4088,31 @@ function addItemsToList(whatToProcess, dataToProcess)
 				case 0:
 					
 					switch (iCol) {
-					case 0:
+					/*case 0:
 						option.id = 'goal';
 						option.value = 'Goal';
 						break;
-					/*case 1:
+					case 1:
 						option.id = 'card';
 						option.value = 'Card';
 						break;*/
-					case 1:
+					case 0:
 						option.id = 'replace';
 						option.value = 'Replace';
 						break;
-					case 2:
+					case 1:
 						option.id = 'undo';
 						option.value = 'Undo';
 						break;
-					case 3:
+					case 2:
 						option.id = 'overwrite';
 						option.value = 'Overwrite';
 						break;
-					case 4:
+					case 3:
 						option.id = 'penalty';
 						option.value = 'Penalty';
 						break;
-					case 5:
+					case 4:
 						option.name = 'cancel_event_btn';
 						option.id = option.name;
 						option.value = 'Cancel';
@@ -4422,23 +4190,13 @@ function addItemsToList(whatToProcess, dataToProcess)
 							
 						case 'overwrite': 
 							
-							for(var ibound=1; ibound<=3; ibound++) 
+							for(var ibound=1; ibound<=1; ibound++) 
 							{
 						    	anchor = document.createElement('a');
 							    anchor.className = 'btn btn-success';
 			
 							    switch(ibound) {
 								case 1:
-								    anchor.id = 'overwrite_team_score';
-								    anchor.innerText = 'Team Score';
-								    anchor.setAttribute('onclick','addItemsToList("LOAD_OVERWRITE_TEAMS_SCORE",this);');
-									break;
-								case 2:
-								    anchor.id = 'overwrite_match_stats';
-								    anchor.innerText = 'Match Stats';
-								    anchor.setAttribute('onclick','addItemsToList("LOAD_OVERWRITE_MATCH_STATS",this);');
-									break;
-								case 3:
 								    anchor.id = 'overwrite_match_substitute';
 								    anchor.innerText = 'Match Subs';
 								    anchor.setAttribute('onclick','addItemsToList("LOAD_OVERWRITE_MATCH_SUB",this);');
@@ -4588,10 +4346,78 @@ function addItemsToList(whatToProcess, dataToProcess)
 				th.scope = 'col';
 			    switch (j) {
 				case 0:
-				    th.innerHTML = dataToProcess.homeTeam.teamName1 + ': ' + dataToProcess.homeTeamScore ;
+				    th.innerHTML = dataToProcess.homeTeam.teamName1;
+				    link_div = document.createElement('div');
+					for(var k=0; k<=2; k++) {
+						switch (k) {
+						case 0: case 2:
+		        			option = document.createElement('input');
+		    				option.type = "button";
+		    				option.classList.add('btn'); 
+		    				option.style.fontSize = '18px'; 
+		    				if (k == 0) {
+							    option.id = 'home_increment_score_btn';
+							    option.value = "+"; 
+							    option.classList.add('btn-success');
+							    option.setAttribute('onclick', 'processUserSelection(this);');
+							} else {
+							    option.id = 'home_decrement_score_btn';
+							    option.value = "-";
+							    option.classList.add('btn-danger');
+							    option.setAttribute('onclick', 'processUserSelection(this);');
+							}
+		    				option.style = 'text-align:center;';
+							break;
+						case 1: 
+		        			option = document.createElement('input');
+		    				option.type = "text";
+		    				option.id = 'homeScore';
+		    				option.name = 'homeScore';
+							option.style = 'width:30%; height:35px; text-align:center; font-size:24px;'; // Increased size
+							option.value = dataToProcess.homeTeamScore;
+							option.onblur = function() { processUserSelection(this);};
+		    				break;
+						}
+						link_div.appendChild(option);
+				    }
+				    th.appendChild(link_div);
 					break;
 				case 1:
-					th.innerHTML = dataToProcess.awayTeam.teamName1 + ': ' + dataToProcess.awayTeamScore ;
+					th.innerHTML = dataToProcess.awayTeam.teamName1;
+					link_div = document.createElement('div');
+					for(var k=0; k<=2; k++) {
+						switch (k) {
+						case 0: case 2:
+		        			option = document.createElement('input');
+		    				option.type = "button";
+		    				option.classList.add('btn'); 
+		    				option.style.fontSize = '18px'; 
+		    				if (k == 0) {
+							    option.id = 'away_increment_score_btn';
+							    option.value = "+"; 
+							    option.classList.add('btn-success');
+							    option.setAttribute('onclick', 'processUserSelection(this);');
+							} else {
+							    option.id = 'away_decrement_score_btn';
+							    option.value = "-";
+							    option.classList.add('btn-danger');
+							    option.setAttribute('onclick', 'processUserSelection(this);');
+							}
+		    				option.style = 'text-align:center;';
+							break;
+						case 1: 
+		        			option = document.createElement('input');
+		    				option.type = "text";
+		    				option.id = 'awayScore';
+		    				option.name = 'awayScore';
+							option.style = 'width:30%; height:35px; text-align:center; font-size:24px;'; // Increased size
+							option.value = dataToProcess.awayTeamScore;
+							option.onblur = function() { processUserSelection(this);};
+		    				break;
+						}
+						link_div.appendChild(option);
+				    }
+				    th.appendChild(link_div);
 					break;
 				}
 			    tr.appendChild(th);
