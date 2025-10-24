@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>Polo</groupId>
   <artifactId>Polo</artifactId>
-  <version>1.01</version>
+  <version>1.02</version>
   <packaging>war</packaging>
   <name>Polo</name>
   <properties>

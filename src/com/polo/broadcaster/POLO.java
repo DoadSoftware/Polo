@@ -26,16 +26,19 @@ import net.sf.json.JSONArray;
 
 public class POLO extends Scene{
 	
-	public String session_selected_broadcaster = "HOCKEY_KHELO_INDIA";
+	public String session_selected_broadcaster = "POLO";
 	
 	public PrintWriter print_writer;
 	public ScoreBug scorebug = new ScoreBug(); 
 	public String which_graphics_onscreen = "";
 	public boolean is_infobar = false;
-	private String logo_path = "C:\\Images\\KHELO_INDIA\\Logos\\";
-	private String icon_path = "D:\\DOAD_In_House_Everest\\Everest_Sports\\Everest_Khelo_India_2023\\Icons\\";
+	public String flag_scorebug_path = "IMAGE*/Default/Essentials/Flags_ScoreBug/";
+	public String flag_path = "IMAGE*/Default/Essentials/Flags/";
+	public String base_path = "IMAGE*/Default/Essentials/Base/";
+	public String text_path = "IMAGE*/Default/Essentials/Text/";
 	private String status;
 	private String slashOrDash = "-";
+	private String data = "";
 	public static List<String> penalties;
 	public static List<String> penaltiesremove;
 	
@@ -192,26 +195,15 @@ public class POLO extends Scene{
 		}
 		
 		switch (whatToProcess.toUpperCase()) {
-		case "POPULATE-SCOREBUG":
+		case "POPULATE-SCOREBUG": case "POPULATE-SCOREBUG_WITHTIME":
 		case "POPULATE-L3-NAMESUPER": case "POPULATE-L3-NAMESUPER-PLAYER": case "POPULATE-FF-MATCHID": case "POPULATE-FF-PLAYINGXI": case "POPULATE-L3-BUG-DB":
 		case "POPULATE-L3-SCOREUPDATE": case "POPULATE-L3-MATCHSTATUS": case "POPULATE-L3-NAMESUPER-CARD": case "POPULATE-L3-SUBSTITUTE": case "POPULATE-L3-MATCHPROMO":
 		case "POPULATE-L3-STAFF": case "POPULATE-FF-MATCHSTATS": case "POPULATE-FF-PROMO": case "POPULATE-DOUBLE_PROMO": case "POPULATE-POINTS_TABLE": 
 		case "POPULATE-OFFICIALS": case "POPULATE-PENALTY": case "POPULATE-L3-SINGLE_SUBSTITUTE":
-			switch(whatToProcess.toUpperCase()) {
-			//case "POPULATE-SCOREBUG_STATS": case "POPULATE-RED_CARD": case "POPULATE-EXTRA_TIME": case "POPULATE-SPONSOR": case "POPULATE-SCOREBUG_STATS_TWO":
-			//case "POPULATE-SCOREBUG-CARD":	case "POPULATE-SCOREBUG-SUBS": case "POPULATE-EXTRA_TIME_BOTH":
-				//break;
-			case "POPULATE-SCOREBUG":
-				scenes.get(0).scene_load(session_socket, session_selected_broadcaster);
-				break;
-			default:
-				scenes.get(1).setScene_path(valueToProcess.split(",")[1]);
-				scenes.get(1).scene_load(session_socket,session_selected_broadcaster);
-				break;
-			}
+			
 			switch (whatToProcess.toUpperCase()) {
-			case "POPULATE-SCOREBUG":
-				populateScoreBug(false,scorebug,session_socket, valueToProcess.split(",")[1],match, session_selected_broadcaster);
+			case "POPULATE-SCOREBUG": case "POPULATE-SCOREBUG_WITHTIME":
+				populateScoreBug(false, scorebug, session_socket, "", match, session_selected_broadcaster);
 				break;
 			case "POPULATE-L3-NAMESUPER":
 				//System.out.println("Value1 : " + valueToProcess.split(",")[1] + "Value2 : " + valueToProcess.split(",")[2]);
@@ -241,13 +233,13 @@ public class POLO extends Scene{
 			 */
 			case "POPULATE-L3-BUG-DB":
 				for(Bugs bug : hockeyService.getBugs()) {
-					  if(bug.getBugId() == Integer.valueOf(valueToProcess.split(",")[2])) {
-						  populateBugsDB(session_socket, valueToProcess.split(",")[1], bug, match, session_selected_broadcaster);
+					  if(bug.getBugId() == Integer.valueOf(valueToProcess.split(",")[1])) {
+						  populateBugsDB(session_socket, PoloUtil.POLO_OVERLAYS, bug, match, session_selected_broadcaster);
 					  }
 					}
 				break;
 			case "POPULATE-L3-SCOREUPDATE":
-				populateScoreUpdate(session_socket, valueToProcess.split(",")[1], hockeyService,match,clock, session_selected_broadcaster);
+				populateScoreUpdate(session_socket, PoloUtil.POLO_OVERLAYS, hockeyService,match,clock, session_selected_broadcaster);
 				break;
 			case "POPULATE-PENALTY":
 				populateLtPenalty(session_socket, valueToProcess.split(",")[1],valueToProcess, hockeyService,match,clock, session_selected_broadcaster);
@@ -309,7 +301,7 @@ public class POLO extends Scene{
 		case "PROMO_GRAPHICS-OPTIONS":
 			return JSONArray.fromObject(PoloFunctions.processAllFixtures(hockeyService)).toString();
 			
-		case "ANIMATE-IN-SCOREBUG": 
+		case "ANIMATE-IN-SCOREBUG": case "ANIMATE-IN-SCOREBUG_WITHTIME":
 		case "CLEAR-ALL": 
 		case "ANIMATE-OUT":
 		case "ANIMATE-IN-SPONSOR": case "ANIMATE-OUT-SPONSOR": case "ANIMATE-IN-PLAYINGXI": case "ANIMATE-IN-MATCHID": case "ANIMATE-IN-NAMESUPER": 
@@ -348,21 +340,11 @@ public class POLO extends Scene{
 				which_graphics_onscreen = "PLAYINGXI";
 				break;
 			case "ANIMATE-IN-BUG-DB":
-				processAnimation(session_socket, "In", "START", session_selected_broadcaster,2);
+				processAnimation(session_socket, "anim_Bug$In_Out", "START", session_selected_broadcaster,1);
 				which_graphics_onscreen = "BUG-DB";
 				break;
 			case "ANIMATE-IN-SCOREUPDATE":
-				processAnimation(session_socket, "In", "START", session_selected_broadcaster,2);
-				TimeUnit.MILLISECONDS.sleep(500);
-				if(match.getHomeTeamScore() > 0 || match.getAwayTeamScore() > 0) {
-					if(match.getHomeTeamScore() > 4 || match.getAwayTeamScore() > 4) {
-						processAnimation(session_socket, "Scorer3Line_In", "START", session_selected_broadcaster, 2);
-					}else if(match.getHomeTeamScore() > 2 || match.getAwayTeamScore() > 2) {
-						processAnimation(session_socket, "Scorer2Line_In", "START", session_selected_broadcaster, 2);
-					}else {
-						processAnimation(session_socket, "Scorer1Line_In", "START", session_selected_broadcaster, 2);
-					}
-				}
+				processAnimation(session_socket, "anim__LT_Score", "START", session_selected_broadcaster,1);
 				which_graphics_onscreen = "SCOREUPDATE";
 				break;
 			case "ANIMATE-IN-MATCHSTATUS":
@@ -397,8 +379,13 @@ public class POLO extends Scene{
 				processAnimation(session_socket, "In", "START", session_selected_broadcaster,2);
 				which_graphics_onscreen = "POINTS_TABLE";
 				break;
-			case "ANIMATE-IN-SCOREBUG":
-				processAnimation(session_socket, "In", "START", session_selected_broadcaster,1);
+			case "ANIMATE-IN-SCOREBUG": case "ANIMATE-IN-SCOREBUG_WITHTIME":
+				processAnimation(session_socket, "anim_ScoreBug$EventLogo", "START", session_selected_broadcaster,1);
+				processAnimation(session_socket, "anim_ScoreBug$In_Out$Essentials", "START", session_selected_broadcaster,1);
+				
+				if(whatToProcess.equalsIgnoreCase("ANIMATE-IN-SCOREBUG_WITHTIME")) {
+					processAnimation(session_socket, "anim_ScoreBug$In_Out$Time", "START", session_selected_broadcaster,1);
+				}
 				is_infobar = true;
 				scorebug.setScorebug_on_screen(true);
 				break;
@@ -410,14 +397,15 @@ public class POLO extends Scene{
 				which_graphics_onscreen = "OFFICIALS";
 				break;
 			case "CLEAR-ALL":
-				print_writer.println("LAYER1*EVEREST*SINGLE_SCENE CLEAR;");
-				print_writer.println("LAYER2*EVEREST*SINGLE_SCENE CLEAR;");
+				processAnimation(session_socket, "anim_ScoreBug", "SHOW 0.0", session_selected_broadcaster,1);
+				processAnimation(session_socket, "anim__LT_Score", "SHOW 0.0", session_selected_broadcaster,1);
+				processAnimation(session_socket, "anim_Bug", "SHOW 0.0", session_selected_broadcaster,1);
 				which_graphics_onscreen = "";
 				break;
 			
 			case "ANIMATE-OUT-SCOREBUG":
 				if(is_infobar == true) {
-					processAnimation(session_socket, "Out", "START", session_selected_broadcaster,1);
+					processAnimation(session_socket, "anim_ScoreBug", "CONTINUE", session_selected_broadcaster,1);
 					is_infobar = false;
 					scorebug.setScorebug_on_screen(false);
 				}
@@ -428,8 +416,15 @@ public class POLO extends Scene{
 					processAnimation(session_socket, "In", "CONTINUE", session_selected_broadcaster,2);
 					which_graphics_onscreen = "";
 					break;
-				
-				case "NAMESUPERDB": case "NAMESUPER":  case "BUG-DB": case "SCOREUPDATE": case "MATCHSTATUS": case "NAMESUPER_CARD":
+					
+				case "BUG-DB":
+					processAnimation(session_socket, "anim_Bug$In_Out", "CONTINUE", session_selected_broadcaster,1);
+					break;
+				case "SCOREUPDATE":
+					processAnimation(session_socket, "anim__LT_Score", "CONTINUE", session_selected_broadcaster,1);
+					break;
+					
+				case "NAMESUPERDB": case "NAMESUPER":  case "MATCHSTATUS": case "NAMESUPER_CARD":
 				case "SUBSTITUTE": case "MATCHPROMO": case "STAFF":  case "PROMO": case "DOUBLE_PROMO": case "OFFICIALS": 
 				case "PENALTY": case "SINGLE_SUBSTITUTE":
 					processAnimation(session_socket, "Out", "START", session_selected_broadcaster,2);
@@ -447,13 +442,13 @@ public class POLO extends Scene{
 	{
 		print_writer = new PrintWriter(session_socket.getOutputStream(), true);
 		switch(which_broadcaster.toUpperCase()) {
-		case "HOCKEY_KHELO_INDIA":
+		case "POLO":
 			switch(which_layer) {
 			case 1:
-				print_writer.println("LAYER1*EVEREST*STAGE*DIRECTOR*" + animationName + " " + animationCommand + ";");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*STAGE*DIRECTOR*" + animationName + " "+ animationCommand + "\0");
 				break;
 			case 2:
-				print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*" + animationName + " " + animationCommand + ";");
+				print_writer.println("-1 RENDERER*BACK_LAYER*STAGE*DIRECTOR*" + animationName + " "+ animationCommand + "\0");
 				break;
 			}
 			break;
@@ -469,25 +464,53 @@ public class POLO extends Scene{
 		if (match == null) {
 			this.status = "ERROR: Match is null";
 		} else {
-			
 			print_writer = new PrintWriter(session_socket.getOutputStream(), true);
 			
-			print_writer.println("LAYER1*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tScore01 " + match.getHomeTeamScore() + ";");
-			print_writer.println("LAYER1*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tScore02 " + match.getAwayTeamScore() + ";");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug*ACTIVE SET 1\0");
 			
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$Team1$Text$txt_Score*GEOM*TEXT SET " + match.getHomeTeamScore() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$Team2$Text$txt_Score*GEOM*TEXT SET " + match.getAwayTeamScore() + "\0");
 			
-			//System.out.println("Player : " + match.getHomeSquad().get(0).getFull_name());
 			if(is_this_updating == false) {
-				print_writer.println("LAYER1*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tMatchInfo " + match.getMatchIdent() + ";");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$Team1$Out$img_Base*TEXTURE*IMAGE SET " + base_path + match.getHomeTeam().getTeamName4() + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$Team2$Out$img_Base*TEXTURE*IMAGE SET " + base_path + match.getAwayTeam().getTeamName4() + "\0");
 				
-				print_writer.println("LAYER1*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tTeam01 " + match.getHomeTeam().getTeamName1() + ";");
-				print_writer.println("LAYER1*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tTeam02 " + match.getAwayTeam().getTeamName1() + ";");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$Team1$Text$img_Text*TEXTURE*IMAGE SET " + text_path + match.getHomeTeam().getTeamName4() + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$Team2$Text$img_Text*TEXTURE*IMAGE SET " + text_path + match.getAwayTeam().getTeamName4() + "\0");
 				
-//				print_writer.println("LAYER1*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tColor01 " + colors_path 
-//						+ match.getHomeTeamJerseyColor() + HockeyUtil.PNG_EXTENSION + ";");
-//				print_writer.println("LAYER1*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tColor02 " + colors_path
-//						+ match.getAwayTeamJerseyColor() + HockeyUtil.PNG_EXTENSION + ";");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$Team1$Flag$Shadow*TEXTURE*IMAGE SET " + flag_scorebug_path + match.getHomeTeam().getTeamName4() + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$Team2$Flag$Shadow*TEXTURE*IMAGE SET " + flag_scorebug_path + match.getAwayTeam().getTeamName4() + "\0");
+
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$Team1$Flag$img_Flags_ScoreBug*TEXTURE*IMAGE SET " + flag_scorebug_path 
+						+ match.getHomeTeam().getTeamName4() + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$Team2$Flag$img_Flags_ScoreBug*TEXTURE*IMAGE SET " + flag_scorebug_path 
+						+ match.getAwayTeam().getTeamName4() + "\0");
 				
+				String result = "";
+				if(match.getClock() != null) {
+					if (match.getClock().getMatchHalves().equalsIgnoreCase("quarter1")) {
+					    result = "CH 1";
+					} else if (match.getClock().getMatchHalves().equalsIgnoreCase("quarter2")) {
+					    result = "CH 2";
+					} else if (match.getClock().getMatchHalves().equalsIgnoreCase("quarter3")) {
+					    result = "CH 3";
+					} else if (match.getClock().getMatchHalves().equalsIgnoreCase("quarter4")) {
+					    result = "CH 4";
+					}else if (match.getClock().getMatchHalves().equalsIgnoreCase("quarter5")) {
+					    result = "CH 5";
+					} else if (match.getClock().getMatchHalves().equalsIgnoreCase("quarter6")) {
+					    result = "CH 6";
+					} else if (match.getClock().getMatchHalves().equalsIgnoreCase("quarter7")) {
+					    result = "CH 7";
+					}else if (match.getClock().getMatchHalves().equalsIgnoreCase("quarter8")) {
+					    result = "CH 8";
+					}
+				}
+				
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$TimeGrp$Text$img_Text$txt_TeamName*GEOM*TEXT SET " + result + "\0");
+				
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$Team1$Text$img_Text$txt_TeamName*GEOM*TEXT SET " + match.getHomeTeam().getTeamName4() + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_ScoreBug$Main$Team2$Text$img_Text$txt_TeamName*GEOM*TEXT SET " + match.getAwayTeam().getTeamName4() + "\0");
 			}
 		}
 		return scorebug;
@@ -512,8 +535,6 @@ public class POLO extends Scene{
 				TimeUnit.MILLISECONDS.sleep(l);
 			}
 			
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgIcon " + icon_path + "HOCKEY" + 
-					PoloUtil.PNG_EXTENSION + ";");
 			TimeUnit.MILLISECONDS.sleep(l);
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tOtherInfo " + " " +";");
 			TimeUnit.MILLISECONDS.sleep(l);
@@ -544,8 +565,6 @@ public class POLO extends Scene{
 			String Home_or_Away="";
 			int l = 4;
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tOtherInfo " + " " +";");
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgIcon " + icon_path + "HOCKEY" + 
-					PoloUtil.PNG_EXTENSION + ";");
 			TimeUnit.MILLISECONDS.sleep(l);
 			
 			if(TeamId == match.getHomeTeamId()) {
@@ -676,8 +695,6 @@ public class POLO extends Scene{
 			print_writer = new PrintWriter(session_socket.getOutputStream(), true);
 			int l = 4;
 			if(TeamId == match.getHomeTeamId()) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgTeamLogo " + logo_path + match.getHomeTeam().getTeamName4() + 
-						PoloUtil.PNG_EXTENSION + ";");
 				TimeUnit.MILLISECONDS.sleep(l);
 				//print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgTeamColour1 " + colors_path + "Home\\" + match.getHomeTeam().getTeamName1() + "\\Colour1" + HockeyUtil.PNG_EXTENSION + ";");
 				//TimeUnit.MILLISECONDS.sleep(l);
@@ -709,8 +726,6 @@ public class POLO extends Scene{
 				}
 			}
 			else {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgTeamLogo " + logo_path + match.getAwayTeam().getTeamName4() + 
-						PoloUtil.PNG_EXTENSION + ";");
 				TimeUnit.MILLISECONDS.sleep(l);
 				//print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgTeamColour1 " + colors_path + "Away\\" + match.getAwayTeam().getTeamName1() + "\\Colour1" + HockeyUtil.PNG_EXTENSION + ";");
 				//TimeUnit.MILLISECONDS.sleep(l);
@@ -781,8 +796,6 @@ public class POLO extends Scene{
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET vSubHeader 2;");
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tSubText01 " + match.getMatchIdent() + ";");
 			
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgGameIcon " + icon_path + "HOCKEY" + 
-					PoloUtil.PNG_EXTENSION + ";");
 			
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tTeam01 " + match.getHomeTeam().getTeamName1() + ";");
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tTeam02 " + match.getAwayTeam().getTeamName1() + ";");
@@ -811,8 +824,6 @@ public class POLO extends Scene{
 			int l = 4;
 			List<Event> evnt = new ArrayList<Event>();
 			
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgTeamLogo " + logo_path + team.get(Team_id - 1).getTeamName4() + 
-					PoloUtil.PNG_EXTENSION + ";");
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHeader " + "SUBSTITUTIONS" + ";");
 			TimeUnit.MILLISECONDS.sleep(l);
 			
@@ -826,12 +837,10 @@ public class POLO extends Scene{
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber2A " + plyr.get(evnt.get(evnt.size() - 1).getOffPlayerId() - 1).getJersey_number() +";");
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName2A " + plyr.get(evnt.get(evnt.size() - 1).getOffPlayerId() - 1).getTicker_name().toUpperCase() +";");
 				
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow2A " + logo_path + "Red_Arrow" + PoloUtil.PNG_EXTENSION + ";");
-			
+				
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber1A " + plyr.get(evnt.get(evnt.size() - 1).getOnPlayerId() - 1).getJersey_number() +";");
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName1A " + plyr.get(evnt.get(evnt.size() - 1).getOnPlayerId() - 1).getTicker_name().toUpperCase() +";");
 				
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow1A " + logo_path + "Green_Arrow" + PoloUtil.PNG_EXTENSION + ";");
 				
 				break;
 			case "DOUBLE":
@@ -841,19 +850,15 @@ public class POLO extends Scene{
 				TimeUnit.MILLISECONDS.sleep(l);
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber2A " + plyr.get(evnt.get(evnt.size() - 2).getOffPlayerId() - 1).getJersey_number() +";");
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName2A " + plyr.get(evnt.get(evnt.size() - 2).getOffPlayerId() - 1).getTicker_name().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow2A " + logo_path + "Red_Arrow" + PoloUtil.PNG_EXTENSION + ";");
-			
+				
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber1A " + plyr.get(evnt.get(evnt.size() - 2).getOnPlayerId() - 1).getJersey_number() +";");
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName1A " + plyr.get(evnt.get(evnt.size() - 2).getOnPlayerId() - 1).getTicker_name().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow1A " + logo_path + "Green_Arrow" + PoloUtil.PNG_EXTENSION + ";");
 				
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber2B " + plyr.get(evnt.get(evnt.size() - 1).getOffPlayerId() - 1).getJersey_number() +";");
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName2B " + plyr.get(evnt.get(evnt.size() - 1).getOffPlayerId() - 1).getTicker_name().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow2B " + logo_path + "Red_Arrow" + PoloUtil.PNG_EXTENSION + ";");
-			
+				
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber1B " + plyr.get(evnt.get(evnt.size() - 1).getOnPlayerId() - 1).getJersey_number() +";");
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName1B " + plyr.get(evnt.get(evnt.size() - 1).getOnPlayerId() - 1).getTicker_name().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow1B " + logo_path + "Green_Arrow" + PoloUtil.PNG_EXTENSION + ";");
 				
 				break;
 				
@@ -864,27 +869,21 @@ public class POLO extends Scene{
 				TimeUnit.MILLISECONDS.sleep(l);
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber2A " + plyr.get(evnt.get(evnt.size() - 3).getOffPlayerId() - 1).getJersey_number() +";");
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName2A " + plyr.get(evnt.get(evnt.size() - 3).getOffPlayerId() - 1).getTicker_name().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow2A " + logo_path + "Red_Arrow" + PoloUtil.PNG_EXTENSION + ";");
-			
+				
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber1A " + plyr.get(evnt.get(evnt.size() - 3).getOnPlayerId() - 1).getJersey_number() +";");
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName1A " + plyr.get(evnt.get(evnt.size() - 3).getOnPlayerId() - 1).getTicker_name().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow1A " + logo_path + "Green_Arrow" + PoloUtil.PNG_EXTENSION + ";");
 				
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber2B " + plyr.get(evnt.get(evnt.size() - 2).getOffPlayerId() - 1).getJersey_number() +";");
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName2B " + plyr.get(evnt.get(evnt.size() - 2).getOffPlayerId() - 1).getTicker_name().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow2B " + logo_path + "Red_Arrow" + PoloUtil.PNG_EXTENSION + ";");
-			
+				
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber1B " + plyr.get(evnt.get(evnt.size() - 2).getOnPlayerId() - 1).getJersey_number() +";");
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName1B " + plyr.get(evnt.get(evnt.size() - 2).getOnPlayerId() - 1).getTicker_name().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow1B " + logo_path + "Green_Arrow" + PoloUtil.PNG_EXTENSION + ";");
 				
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber2C " + plyr.get(evnt.get(evnt.size() - 1).getOffPlayerId() - 1).getJersey_number() +";");
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName2C " + plyr.get(evnt.get(evnt.size() - 1).getOffPlayerId() - 1).getTicker_name().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow2C " + logo_path + "Red_Arrow" + PoloUtil.PNG_EXTENSION + ";");
-			
+				
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber1C " + plyr.get(evnt.get(evnt.size() - 1).getOnPlayerId() - 1).getJersey_number() +";");
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName1C " + plyr.get(evnt.get(evnt.size() - 1).getOnPlayerId() - 1).getTicker_name().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow1C " + logo_path + "Green_Arrow" + PoloUtil.PNG_EXTENSION + ";");
 				
 				break;
 			}
@@ -910,8 +909,6 @@ public class POLO extends Scene{
 			int l = 4;
 			List<Event> evnt = new ArrayList<Event>();
 			
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgTeamLogo " + logo_path + team.get(Team_id - 1).getTeamName4() + 
-					PoloUtil.PNG_EXTENSION + ";");
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHeader " + "SUBSTITUTIONS" + ";");
 			TimeUnit.MILLISECONDS.sleep(l);
 			
@@ -922,12 +919,10 @@ public class POLO extends Scene{
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber2 " + plyr.get(evnt.get(evnt.size() - 1).getOffPlayerId() - 1).getJersey_number() +";");
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName2 " + plyr.get(evnt.get(evnt.size() - 1).getOffPlayerId() - 1).getTicker_name().toUpperCase() +";");
 			
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow2 " + logo_path + "Red_Arrow" + PoloUtil.PNG_EXTENSION + ";");
-		
+			
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerNumber1 " + plyr.get(evnt.get(evnt.size() - 1).getOnPlayerId() - 1).getJersey_number() +";");
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName1 " + plyr.get(evnt.get(evnt.size() - 1).getOnPlayerId() - 1).getTicker_name().toUpperCase() +";");
 			
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgArrow1 " + logo_path + "Green_Arrow" + PoloUtil.PNG_EXTENSION + ";");
 				
 			print_writer.println("LAYER1*EVEREST*GLOBAL PREVIEW ON;");
 			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*In STOP;");
@@ -1067,35 +1062,18 @@ public class POLO extends Scene{
 			
 			print_writer = new PrintWriter(session_socket.getOutputStream(), true);
 			
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_Bug*ACTIVE SET 1\0");
+			
 			if(bug.getText1() != null && bug.getText2() != null) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName01 " + bug.getText1().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tInfo1A " + "" +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tInfo1B " + bug.getText2().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tInfo1C " + "" +";");
-				
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_Bug$Text$txt_TeamName*GEOM*TEXT SET " + bug.getText1().toUpperCase() 
+						+ " " + bug.getText2().toUpperCase() + "\0");
 			}else if(bug.getText1() != null) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName01 " + bug.getText1().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tInfo1A " + "" +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tInfo1B " + "" +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tInfo1C " + "" +";");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_Bug$Text$txt_TeamName*GEOM*TEXT SET " + bug.getText1().toUpperCase() + "\0");
 			}else {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tPlayerName01 " + bug.getText2().toUpperCase() +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tInfo1A " + "" +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tInfo1B " + "" +";");
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tInfo1C " + "" +";");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_Bug$Text$txt_TeamName*GEOM*TEXT SET " + bug.getText2().toUpperCase() + "\0");
 			}
 			
-			print_writer.println("LAYER1*EVEREST*GLOBAL PREVIEW ON;");
-			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*In STOP;");
-			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*Out STOP;");
-			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*In SHOW 32.0;");
-			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*Out SHOW 0.0;");
-			print_writer.println("LAYER1*EVEREST*GLOBAL SNAPSHOT_PATH C:/Temp/Preview.png;");
-			print_writer.println("LAYER1*EVEREST*GLOBAL SNAPSHOT 1920 1080;");
-			TimeUnit.SECONDS.sleep(1);
-			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*Out SHOW 0.0;");
-			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*In SHOW 0.0;");
-			print_writer.println("LAYER1*EVEREST*GLOBAL PREVIEW OFF;");
+			print_writer.println("-1 RENDERER PREVIEW SCENE*" + viz_scene + " C:/Temp/Preview.png anim_Bug$In_Out 0.500 anim_Bug$In_Out$In 0.500 \0");
 		}
 	}
 	public void populateScoreUpdate(Socket session_socket,String viz_scene,PoloService hockeyService,Match match,Clock clock, String session_selected_broadcaster) throws InterruptedException, IOException{
@@ -1105,118 +1083,38 @@ public class POLO extends Scene{
 			
 			print_writer = new PrintWriter(session_socket.getOutputStream(), true);
 			
-			int l=4;
-			String h1="",h2="",h3="",a1="",a2="",a3="";
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$TopLine$Text$img_Text$txt_TeamName*GEOM*TEXT SET " + "CHUKKAS SCORES" + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$TopLine$Text$Score$txt_1*GEOM*TEXT SET " + "1" + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$TopLine$Text$Score$txt_2*GEOM*TEXT SET " + "2" + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$TopLine$Text$Score$txt_3*GEOM*TEXT SET " + "3" + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$TopLine$Text$Score$txt_4*GEOM*TEXT SET " + "4" + "\0");
 			
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgHomeTeamLogo " + logo_path + match.getHomeTeam().getTeamName4() + 
-					PoloUtil.PNG_EXTENSION+ ";");
-			TimeUnit.MILLISECONDS.sleep(l);
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgAwayTeamLogo " + logo_path + match.getAwayTeam().getTeamName4() + 
-					PoloUtil.PNG_EXTENSION+ ";");
-			TimeUnit.MILLISECONDS.sleep(l);
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team1$Text$img_Text$txt_TeamName*GEOM*TEXT SET " + match.getHomeTeam().getTeamName1() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team1$img_Base*TEXTURE*IMAGE SET " + base_path + match.getHomeTeam().getTeamName4() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team1$Text$img_Text*TEXTURE*IMAGE SET " + text_path + match.getHomeTeam().getTeamName4() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team1$Flag$Shadow*TEXTURE*IMAGE SET " + flag_scorebug_path + match.getHomeTeam().getTeamName4() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team1$Flag$img_Flags_ScoreBug*TEXTURE*IMAGE SET " + flag_scorebug_path + match.getHomeTeam().getTeamName4() + "\0");
 			
-			if(match.getClock().getMatchHalves().equalsIgnoreCase(PoloUtil.HALF)) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHeader " + clock.getMatchHalves().toUpperCase() + " TIME" + ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-			}else if(match.getClock().getMatchHalves().equalsIgnoreCase(PoloUtil.FULL)) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHeader " + clock.getMatchHalves().toUpperCase() + " TIME"+ ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-			}else if(match.getClock().getMatchHalves().equalsIgnoreCase(PoloUtil.FIRST)) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHeader " + "FIRST HALF"+ ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-			}else if(match.getClock().getMatchHalves().equalsIgnoreCase(PoloUtil.SECOND)) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHeader " + "SECOND HALF"+ ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-			}else if(match.getClock().getMatchHalves().equalsIgnoreCase(PoloUtil.EXTRA1)) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHeader " + "EXTRA TIME 1"+ ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-			}else if(match.getClock().getMatchHalves().equalsIgnoreCase(PoloUtil.EXTRA2)) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHeader " + "EXTRA TIME 2"+ ";");
-				TimeUnit.MILLISECONDS.sleep(l);
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team2$Text$img_Text$txt_TeamName*GEOM*TEXT SET " + match.getAwayTeam().getTeamName1() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team2$img_Base*TEXTURE*IMAGE SET " + base_path + match.getAwayTeam().getTeamName4() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team2$Text$img_Text*TEXTURE*IMAGE SET " + text_path + match.getAwayTeam().getTeamName4() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team2$Flag$Shadow*TEXTURE*IMAGE SET " + flag_scorebug_path + match.getAwayTeam().getTeamName4() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team2$Flag$img_Flags_ScoreBug*TEXTURE*IMAGE SET " + flag_scorebug_path + match.getAwayTeam().getTeamName4() + "\0");
+			
+			
+			for(int i=1;i <= match.getSets().size() ; i++) {
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team1$Text$Score$txt_" + i + "*GEOM*TEXT SET " 
+						+ match.getSets().get(i-1).getHomeScore() + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team2$Text$Score$txt_" + i + "*GEOM*TEXT SET " 
+						+ match.getSets().get(i-1).getAwayScore() + "\0");
 			}
 			
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHomeTeamName " + match.getHomeTeam().getTeamName1().toUpperCase() + ";");
-			TimeUnit.MILLISECONDS.sleep(l);
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tAwayTeamName " + match.getAwayTeam().getTeamName1().toUpperCase() + ";");
-			TimeUnit.MILLISECONDS.sleep(l);
-			
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tScore " + match.getHomeTeamScore() + "-" + match.getAwayTeamScore() + ";");
-			TimeUnit.MILLISECONDS.sleep(l);
-			
-			if(match.getHomeTeamScore() == 0 ) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET vHomeScorerData " + "0" + ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-			}else if(match.getHomeTeamScore() > 0 && match.getHomeTeamScore() <= 2) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET vHomeScorerData " + "1" + ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-			}else if(match.getHomeTeamScore() > 2 && match.getHomeTeamScore() <= 4) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET vHomeScorerData " + "2" + ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-			}else {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET vHomeScorerData " + "3" + ";");
-				TimeUnit.MILLISECONDS.sleep(l);
+			for(int j = match.getSets().size()+1;j<=4;j++) {
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team1$Text$Score$txt_" + j + "*GEOM*TEXT SET " + "-" + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_Score$Subline$Team2$Text$Score$txt_" + j + "*GEOM*TEXT SET " + "-" + "\0");
 			}
 			
-			if(match.getAwayTeamScore() == 0 ) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET vAwayScorerData " + "0" + ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-			}else if(match.getAwayTeamScore() > 0 && match.getAwayTeamScore() <= 2) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET vAwayScorerData " + "1" + ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-			}else if(match.getAwayTeamScore() > 2 && match.getAwayTeamScore() <= 4) {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET vAwayScorerData " + "2" + ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-			}else {
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET vAwayScorerData " + "3" + ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-			}
-			
-			List<String> home_stats = new ArrayList<String>();
-			List<String> away_stats = new ArrayList<String>();
-			
-			for(int i=0;i<=home_stats.size()-1;i++) {
-				if(i < 2) { 
-					h1 = h1 + home_stats.get(i); 
-					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHomeTeamPlayers1 " + h1 + ";");
-					TimeUnit.MILLISECONDS.sleep(l);
-				}else if(i < 4) {
-					h2 = h2 + home_stats.get(i);
-					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHomeTeamPlayers2 " + h2 + ";");
-					TimeUnit.MILLISECONDS.sleep(l);
-				}else if(i < 6){
-					h3 = h3 + home_stats.get(i);
-					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHomeTeamPlayers3 " + h3 + ";");
-					TimeUnit.MILLISECONDS.sleep(l);
-				}
-			}
-			
-			for(int i=0;i<=away_stats.size()-1;i++) {
-				if(i < 2) { 
-					a1 = a1 + away_stats.get(i); 
-					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tAwayTeamPlayers1 " + a1 + ";");
-					TimeUnit.MILLISECONDS.sleep(l);
-				}else if(i < 4) {
-					a2 = a2 + away_stats.get(i);
-					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tAwayTeamPlayers2 " + a2 + ";");
-					TimeUnit.MILLISECONDS.sleep(l);
-				}else if(i < 6){
-					a3 = a3 + away_stats.get(i);
-					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tAwayTeamPlayers3 " + a3 + ";");
-					TimeUnit.MILLISECONDS.sleep(l);
-				}
-			}
-			
-			print_writer.println("LAYER1*EVEREST*GLOBAL PREVIEW ON;");
-			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*In STOP;");
-			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*Out STOP;");
-			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*In SHOW 58.0;");
-			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*Out SHOW 0.0;");
-			print_writer.println("LAYER1*EVEREST*GLOBAL SNAPSHOT_PATH C:/Temp/Preview.png;");
-			print_writer.println("LAYER1*EVEREST*GLOBAL SNAPSHOT 1920 1080;");
-			TimeUnit.SECONDS.sleep(1);
-			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*Out SHOW 0.0;");
-			print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*In SHOW 0.0;");
-			print_writer.println("LAYER1*EVEREST*GLOBAL PREVIEW OFF;");
+			print_writer.println("-1 RENDERER PREVIEW SCENE*" + viz_scene + " C:/Temp/Preview.png anim__LT_Score$In_Out 0.900 anim__LT_Score$In_Out$In 0.900 \0");
 		}
 	}
 	public void populateMatchStatus(Socket session_socket,String viz_scene,Match match, String session_selected_broadcaster) throws InterruptedException, IOException, CsvException{
@@ -1233,13 +1131,10 @@ public class POLO extends Scene{
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tInfo " + match.getTournament().toUpperCase() + ";");
 			TimeUnit.MILLISECONDS.sleep(l);
 			
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgHomeTeamLogo " + logo_path + match.getHomeTeam().getTeamName4() + 
-					PoloUtil.PNG_EXTENSION+ ";");
+			
 			TimeUnit.MILLISECONDS.sleep(l);
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHomeTeamName " + match.getHomeTeam().getTeamName1() + ";");
 			TimeUnit.MILLISECONDS.sleep(l);
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgAwayTeamLogo " + logo_path + match.getAwayTeam().getTeamName4() + 
-					PoloUtil.PNG_EXTENSION+ ";");
 			TimeUnit.MILLISECONDS.sleep(l);
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tAwayTeamName " + match.getAwayTeam().getTeamName1() + ";");
 			TimeUnit.MILLISECONDS.sleep(l);
@@ -1314,11 +1209,7 @@ public class POLO extends Scene{
 			for(;count < count1;) {
 			//if(count < count1) {
 				row_id = row_id + 1;
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgHomeLogo" + row_id + " " + logo_path + team.get(fixture.get(count).getHometeamid() - 1).getTeamName4().toUpperCase() + 
-						PoloUtil.PNG_EXTENSION+ ";");
-				TimeUnit.MILLISECONDS.sleep(l);
-				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgAwayLogo" + row_id + " " + logo_path + team.get(fixture.get(count).getAwayteamid() - 1).getTeamName4().toUpperCase() + 
-						PoloUtil.PNG_EXTENSION+ ";");
+				
 				TimeUnit.MILLISECONDS.sleep(l);
 				print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHomeTeamName" + row_id + " " + team.get(fixture.get(count).getHometeamid() - 1).getTeamName1().toUpperCase() + ";");
 				TimeUnit.MILLISECONDS.sleep(l);
@@ -1359,9 +1250,6 @@ public class POLO extends Scene{
 			
 			print_writer = new PrintWriter(session_socket.getOutputStream(), true);
 			int l = 4;
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgTeamLogo " + logo_path + team.get(st.getClubId() - 1).getTeamName4() + 
-					PoloUtil.PNG_EXTENSION + ";");
-			TimeUnit.MILLISECONDS.sleep(l);
 			
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tTeam " + team.get(st.getClubId() - 1).getTeamName1().toUpperCase() +";");
 			TimeUnit.MILLISECONDS.sleep(l);
@@ -1395,8 +1283,6 @@ public class POLO extends Scene{
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET vSubHeader 2;");
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tSubText01 " + match.getMatchIdent() + ";");
 			
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgGameIcon " + icon_path + "HOCKEY" + 
-					PoloUtil.PNG_EXTENSION + ";");
 			
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET vVSOptions 0;");
 			
@@ -1435,20 +1321,7 @@ public class POLO extends Scene{
 			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHeader " + fix.get(match_number - 1).getMatchfilename().toUpperCase() + ";");
 			TimeUnit.MILLISECONDS.sleep(l);
 			
-			for(Team TM : team) {
-				if(fix.get(match_number - 1).getHometeamid() == TM.getTeamId()) {
-					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgHomeTeamLogo " + logo_path + TM.getTeamName4().toUpperCase() + PoloUtil.PNG_EXTENSION + ";");
-					TimeUnit.MILLISECONDS.sleep(l);
-					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHomeTeamName "+ TM.getTeamName1().toUpperCase() + ";");
-					TimeUnit.MILLISECONDS.sleep(l);
-				}
-				if(fix.get(match_number - 1).getAwayteamid() == TM.getTeamId()) {
-					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgAwayTeamLogo " + logo_path + TM.getTeamName4().toUpperCase() + PoloUtil.PNG_EXTENSION + ";");
-					TimeUnit.MILLISECONDS.sleep(l);
-					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tAwayTeamName "+ TM.getTeamName1().toUpperCase() + ";");
-					TimeUnit.MILLISECONDS.sleep(l);
-				}
-			}
+			
 			
 			Calendar cal = Calendar.getInstance();
 			//cal.add(Calendar.DATE, +1);
@@ -1511,11 +1384,7 @@ public class POLO extends Scene{
 							grou = ground.get(j).getFullname();
 						}
 					}
-					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgHomeLogo" + row_id + " " + logo_path + team.get(fixture.get(i).getHometeamid() - 1).getTeamName4().toUpperCase() + 
-							PoloUtil.PNG_EXTENSION+ ";");
-					TimeUnit.MILLISECONDS.sleep(l);
-					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgAwayLogo" + row_id + " " + logo_path + team.get(fixture.get(i).getAwayteamid() - 1).getTeamName4().toUpperCase() + 
-							PoloUtil.PNG_EXTENSION+ ";");
+					
 					TimeUnit.MILLISECONDS.sleep(l);
 					print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tHomeTeamFirstName" + row_id + " " + team.get(fixture.get(i).getHometeamid() - 1).getTeamName2().toUpperCase() + ";");
 					TimeUnit.MILLISECONDS.sleep(l);
@@ -1554,8 +1423,6 @@ public class POLO extends Scene{
 		print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tSubText01 " + "GROUP A" + ";");
 		print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET tSubText02 " + "GROUP B" + ";");
 		
-		print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgGameIcon " + icon_path + "HOCKEY" + 
-				PoloUtil.PNG_EXTENSION + ";");
 		
 		for(int i = 0; i <= point_table1.size() - 1 ; i++) {
 			row_no = row_no + 1;
@@ -1665,12 +1532,7 @@ public class POLO extends Scene{
 			
 			int l=4;
 			int iHomeCont = 0, iAwayCont = 0;
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgHomeTeamLogo " + logo_path + match.getHomeTeam().getTeamName4() + 
-					PoloUtil.PNG_EXTENSION+ ";");
-			TimeUnit.MILLISECONDS.sleep(l);
-			print_writer.println("LAYER2*EVEREST*TREEVIEW*Main*FUNCTION*TAG_CONTROL SET lgAwayTeamLogo " + logo_path + match.getAwayTeam().getTeamName4() + 
-					PoloUtil.PNG_EXTENSION+ ";");
-			TimeUnit.MILLISECONDS.sleep(l);
+			
 			
 			
 			

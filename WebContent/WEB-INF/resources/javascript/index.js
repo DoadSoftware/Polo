@@ -200,34 +200,49 @@ function processUserSelectionData(whatToProcess,dataToProcess){
 	
 	switch (whatToProcess) {
 	case 'LOGGER_FORM_KEYPRESS':
-		alert(dataToProcess)
 		switch (dataToProcess) {
-				
+		case ' '://Space
+			processPoloProcedures('CLEAR-ALL');
+			break;	
+		case '=':
+			processPoloProcedures('ANIMATE-OUT-SCOREBUG');
+			break;
+		case '-': '189'
+			if(confirm('It will Also Delete Your Preview from Directory...\r\n\r\n Are You Sure To Animate Out?') == true){
+				processPoloProcedures('ANIMATE-OUT');
+			}
+			break;
+			
+		case 'F1':
+			processPoloProcedures('POPULATE-SCOREBUG');
+			break;
+		case 'F2':
+			processPoloProcedures('POPULATE-SCOREBUG_WITHTIME');
+			break;
+		case 'F7':
+			processPoloProcedures('POPULATE-L3-SCOREUPDATE');
+			break;	
+			
+		case 'F6':
+			$("#select_event_div").hide();
+			$("#select_set_div").hide();
+			$("#match_configuration").hide();
+			$("#polo_div").hide();
+			
+			switch (dataToProcess){
+			case 'F6':
+				processPoloProcedures('BUG_DB_GRAPHICS-OPTIONS');
+				break;
+			}
+			break;
 		}
 		break;
 	}
 }
 function processUserSelection(whichInput)
 {	
+	var error_msg = '';
 	switch ($(whichInput).attr('name')) {
-	case 'selectStatsType':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE':
-			if ($('#selectStatsType option:selected').val() == 'Formation_with_image') {
-				formationScene = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Formation.sum';
-			}else{
-				formationScene = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Formation_NO_Image.sum';
-			}
-			break;
-		case 'SANTOSH_TROPHY':
-			if ($('#selectStatsType option:selected').val() == 'Formation_with_image') {
-				formationScene = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/Formation.sum';
-			}else{
-				formationScene = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/Formation_NO_Image.sum';
-			}
-			break;
-		}
-		break;
 	case 'overwrite_match_stats_index':
 
 		document.getElementById('overwrite_match_stats_player_id').selectedIndex = 0;
@@ -258,6 +273,7 @@ function processUserSelection(whichInput)
 		$('#select_graphic_options_div').empty();
 		document.getElementById('select_graphic_options_div').style.display = 'none';
 		$("#select_event_div").show();
+		$("#select_set_div").show();
 		$("#match_configuration").show();
 		$("#polo_div").show();
 		break;
@@ -327,6 +343,50 @@ function processUserSelection(whichInput)
 	case 'log_replace_btn':
 		processPoloProcedures('REPLACE',match_data);
 		break;
+		
+	case 'start_set_btn':
+		match_data.sets.forEach(function(set){
+			if(set.set_status.toLowerCase() == 'start') {
+				error_msg = 'Set number ' + set.set_number + ' already in play. End this set first before starting a new one';
+			}
+		});
+		if(error_msg) {
+			alert(error_msg);
+			return false;			
+		} else {
+			processWaitingButtonSpinner('START_WAIT_TIMER');
+			processPoloProcedures('LOG_SET','START');
+		}
+		break;
+	case 'end_set_btn': case 'reset_set_btn':
+		error_msg = 'Cannot find any started set. Please start a set first';
+		match_data.sets.forEach(function(set){
+			if(set.set_status.toLowerCase() == 'start') {
+				error_msg = '';
+			}
+		});
+		if(error_msg) {
+			alert(error_msg);
+			return false;			
+		} else {
+			switch ($(whichInput).attr('name')) {
+			case 'end_set_btn':
+				processVariousStats('CHECK-END_SET-WINNER',match_data); 
+				if(confirm('Confirm ' + $('#select_set_winner option:selected').text() + ' wins this set?')) {
+					processWaitingButtonSpinner('START_WAIT_TIMER');
+					processPoloProcedures('LOG_SET','END');
+				}
+				break;
+			case 'reset_set_btn':
+				if(confirm('Do you really wish to RESET this set?')) {
+					processWaitingButtonSpinner('START_WAIT_TIMER');
+					processPoloProcedures('LOG_SET','RESET');
+				}
+				break;
+			}
+		}
+		break;
+		
 	case 'cancel_match_setup_btn':
 		document.setup_form.method = 'post';
 		document.setup_form.action = 'back_to_match';
@@ -436,125 +496,16 @@ function processUserSelection(whichInput)
 		addItemsToList('POPULATE-OFF_PLAYER',match_data);
 		addItemsToList('POPULATE-ON_PLAYER',match_data);
 		break;
-	case 'change_on':
-		processPoloProcedures('ANIMATE-CHANGE_ON');
-		break;
-	case 'change_on_formation':
-		processPoloProcedures('ANIMATE-CHANGE_ON_FORMATION');
-		break;
-	case 'change_on_formation_without_image':
-		processPoloProcedures('ANIMATE-CHANGE_ON_FORMATION_WITHOUT_IMAGE');
-		break;	
-	case 'populate_namesuper_btn': case 'populate_namesuper_player_btn': case 'populate_playingxi_btn': case 'populate_api_btn': case 'populate_bug_db_btn': case 'populate_namesuper_card_btn': 
-	case 'populate_staff_btn': case 'populate_match_promo_btn':case 'populate_sponsor_btn': case 'populate_substitution_btn': case 'populate_formation_btn': case 'populate_scorebug_card_btn':
-	case 'populate_scorebug_subs_btn': case 'populate_single_substitution_btn': case 'populate_playingxi_changeon_btn': case 'populate_points_table_btn': case 'populate_homesub_btn': 
-	case 'populate_Away_btn': case 'populate_awaysub_btn': case 'populate_sub_btn': case 'populate_heatmap_btn': case 'populate_Top_Stats_btn': case 'populate_fixtures_btn':
-	case 'populate_subchange_on_btn': case 'populate_double_promo_btn': case 'populate_ltmatch_promo_btn': case 'populate_scorebug_match_promo_btn': case 'populate_points_table2_btn':
-	case 'populate_result_promo_btn':	
+	
+	case 'populate_bug_db_btn':		
 		processWaitingButtonSpinner('START_WAIT_TIMER');
 		switch ($(whichInput).attr('name')) {
-		case 'populate_subchange_on_btn':
-			processPoloProcedures('ANIMATE-SUB_CHANGE_ON');
-			break;
-		case 'populate_Away_btn':
-			processPoloProcedures('POPULATE-AWAYXI');
-			break;
-		case 'populate_awaysub_btn':
-			processPoloProcedures('POPULATE-AWAYSUB');
-			break;
-		case 'populate_homesub_btn':
-			processPoloProcedures('POPULATE-HOMESUB');
-			break;
-		case 'populate_sub_btn':
-			processPoloProcedures('POPULATE-SUBS_CHANGE_ON');
-			break;
-		case 'populate_heatmap_btn':
-			processPoloProcedures('POPULATE-L3-HEATMAP');
-			break;
-		case 'populate_Top_Stats_btn':
-			processPoloProcedures('POPULATE-L3-TOP_STATS');
-			break;
-		case 'populate_namesuper_btn':
-			processPoloProcedures('POPULATE-L3-NAMESUPER');
-			break;
-		case 'populate_namesuper_player_btn':
-			processPoloProcedures('POPULATE-L3-NAMESUPER-PLAYER');
-			break;
-		case 'populate_playingxi_btn':
-			processPoloProcedures('POPULATE-FF-PLAYINGXI');
-			break;
-		case 'populate_playingxi_changeon_btn':
-			processPoloProcedures('POPULATE-FF-PLAYINGXI_CHANGEON');
-			break;
 		case 'populate_bug_db_btn':
 			processPoloProcedures('POPULATE-L3-BUG-DB');
-			break;
-		case 'populate_namesuper_card_btn':
-			processPoloProcedures('POPULATE-L3-NAMESUPER-CARD');
-			break;
-		case 'populate_staff_btn':
-			processPoloProcedures('POPULATE-L3-STAFF');
-			break;
-		case 'populate_scorebug_match_promo_btn':
-			processPoloProcedures('POPULATE-SCOREBUG-PROMO');
-			break;
-		case 'populate_ltmatch_promo_btn':
-			processPoloProcedures('POPULATE-LT-PROMO');
-			break;
-		case 'populate_result_promo_btn':
-			processPoloProcedures('POPULATE-LT-RESULT');
-			break;
-		case 'populate_match_promo_btn':
-			processPoloProcedures('POPULATE-FF-PROMO');
-			break;
-		case 'populate_sponsor_btn':
-			processPoloProcedures('POPULATE-HERO-SPONSOR');
-			break;
-		case 'populate_substitution_btn':
-			processPoloProcedures('POPULATE-L3-SUBSTITUTE');
-			break;
-		case 'populate_single_substitution_btn':
-			processPoloProcedures('POPULATE-L3-SINGLE_SUBSTITUTE');
-			break;
-		case 'populate_scorebug_subs_btn':
-			processPoloProcedures('POPULATE-SCOREBUG-SUBS');
-			break;
-		case 'populate_formation_btn':
-			processPoloProcedures('POPULATE-FF-FORMATION');
-			break;
-		case 'populate_scorebug_card_btn':
-			processPoloProcedures('POPULATE-SCOREBUG-CARD');
-			break;
-		case 'populate_points_table_btn':
-			processPoloProcedures('POPULATE-POINTS_TABLE');
-			break;
-		case 'populate_points_table2_btn':
-			processPoloProcedures('POPULATE-POINTS_TABLE2');
-			break;
-		case 'populate_double_promo_btn':
-			processPoloProcedures('POPULATE-DOUBLE_PROMO');
-			break;
-		case 'populate_fixtures_btn':
-			processPoloProcedures('POPULATE-FIXTURES');
 			break;
 		}
 		break;
 	
-	case 'populate_stats_btn':
-		processPoloProcedures('POPULATE-SCOREBUG_STATS');
-		break;
-	case 'populate_stats_two_btn':
-		processPoloProcedures('POPULATE-SCOREBUG_STATS_TWO');
-		break;
-	case 'populate_extra_time_btn':
-		processPoloProcedures('POPULATE-EXTRA_TIME');
-		break;
-	case 'populate_red_card_btn':
-		processPoloProcedures('POPULATE-RED_CARD');
-		break;
-	case 'populate_extra_time_both_btn':
-		processPoloProcedures('POPULATE-EXTRA_TIME_BOTH');
-		break;
 	case 'homeScore': case 'awayScore':
 		processPoloProcedures('UPDATE_SCORE_USING_TXT',"");
 		break;
@@ -599,6 +550,23 @@ function processUserSelection(whichInput)
 		break;
 	}
 }
+function processVariousStats(whatToProcess, whichInput)
+{
+	switch(whatToProcess){
+	case 'CHECK-END_SET-WINNER':
+		match_data.sets.forEach(function(set){
+			if(set.set_status.toLowerCase() == 'start') {
+				if(set.homeScore > set.awayScore){
+					$('#select_set_winner').val('home');
+				}else if(set.awayScore > set.homeScore){
+					$('#select_set_winner').val('away');
+				}
+			}
+		});
+		break;	
+	}
+}
+
 function processPoloProcedures(whatToProcess, whichInput)
 {
 	var value_to_process; 
@@ -629,6 +597,18 @@ function processPoloProcedures(whatToProcess, whichInput)
 	case 'LOAD_TEAMS':
 		value_to_process = $('#homeTeamId option:selected').val() + ',' + $('#awayTeamId option:selected').val();
 		break;
+		
+	case 'LOG_SET':
+		if(whichInput == 'START' || whichInput == 'RESET') {
+			value_to_process = whichInput;
+		}else if(whichInput == 'END') {
+			switch(whatToProcess) {
+			case 'LOG_SET': 
+				value_to_process = whichInput + ',' + $('#select_set_winner option:selected').val();
+				break;
+			}
+		}
+		break;
 
 	case 'LOAD_MATCH': case 'LOAD_SETUP':
 		value_to_process = whichInput.val();
@@ -644,590 +624,14 @@ function processPoloProcedures(whatToProcess, whichInput)
 	case 'REPLACE':
 		value_to_process = $('#select_player option:selected').val() + ',' + $('#select_sub_player option:selected').val();
 		break;
-	case 'POPULATE-L3-HEATMAP':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'VIZ_TRI_NATION':
-				value_to_process = '/Default/LT' + ',' + $('#selectTeam option:selected').val() + ',' + $('#selectHeatmappeakdistance option:selected').val() 
-					+ ',' + $('#selectPlayer option:selected').val() ;
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/LT' + ',' + $('#selectTeam option:selected').val() + ',' + $('#selectHeatmappeakdistance option:selected').val() 
-					+ ',' + $('#selectPlayer option:selected').val() ;
-				break;	
-		}
-		break;
-	case 'POPULATE-L3-TOP_STATS':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'VIZ_TRI_NATION':
-				value_to_process = '/Default/LT' + ',' + $('#selectTeam option:selected').val() + ',' + $('#selectTopStats option:selected').val();
-				break;	
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/LT' + ',' + $('#selectTopStats option:selected').val();
-				break;	
-		}
-		break;
-	case 'POPULATE-L3-NAMESUPER':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/LT_GoalScorer.sum' + ',' + $('#selectNameSuper option:selected').val() ;
-			//value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/LT_NameSuper.sum' + ',' + $('#selectNameSuper option:selected').val() ;
-				break;
-			case 'HOCKEY_KHELO_INDIA':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_Khelo_India_2023/Scenes/LT.sum' + ',' + 
-					$('#selectNameSuper option:selected').val() ;
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/LT_NameSuper.sum' + ',' + $('#selectNameSuper option:selected').val() ;
-				break;
-			case 'VIZ_TRI_NATION':
-				value_to_process = '/Default/LT' + ',' + $('#selectNameSuper option:selected').val() ;
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/LT' + ',' + $('#selectNameSuper option:selected').val() ;
-				break;	
-		}
-		break;
-	case 'POPULATE-PENALTY':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/LT_Penalty.sum';
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/LT_Penalty.sum';
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/Penalty';
-				break;
-		}
-		break;
-	case 'POPULATE-L3-STAFF':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/LT_HeadCoach.sum' + ',' + $('#selectStaff option:selected').val() ;
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/LT_NameSuper.sum' + ',' + $('#selectStaff option:selected').val() ;
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/LT' + ',' + $('#selectStaff option:selected').val() ;
-				break;
-		}
-		break;
-	case 'POPULATE-SCOREBUG-PROMO':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/MatchId.sum' + ',' + $('#selectMatchPromo option:selected').val();
-				//alert(value_to_process);
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/MatchId.sum' + ',' + $('#selectMatchPromo option:selected').val() ;
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = $('#selectMatchPromo option:selected').val();
-				break;
-		}
-		break;
-	case 'POPULATE-LT-PROMO':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/MatchId.sum' + ',' + $('#selectMatchPromo option:selected').val();
-				//alert(value_to_process);
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/MatchId.sum' + ',' + $('#selectMatchPromo option:selected').val() ;
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/LT' + ',' + $('#selectMatchPromo option:selected').val();
-				break;
-		}
-		break;
-	case 'POPULATE-LT-RESULT':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/MatchId.sum' + ',' + $('#selectMatchPromo option:selected').val();
-				//alert(value_to_process);
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/MatchId.sum' + ',' + $('#selectMatchPromo option:selected').val() ;
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/LT' + ',' + $('#selectMatchPromo option:selected').val();
-				break;
-		}
-		break;
-	case 'POPULATE-FF-PROMO':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/MatchId.sum' + ',' + $('#selectMatchPromo option:selected').val();
-				//alert(value_to_process);
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/MatchId.sum' + ',' + $('#selectMatchPromo option:selected').val() ;
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames' + ',' + $('#selectMatchPromo option:selected').val();
-				break;
-		}
-		break;
-	case 'POPULATE-L3-NAMESUPER-PLAYER':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/LT_GoalScorer.sum' + ',' + $('#selectTeam option:selected').val() + ',' + 
-					$('#selectCaptainWicketKeeper option:selected').val() + ',' + $('#selectPlayer option:selected').val() ;
-				break;
-			case 'HOCKEY_KHELO_INDIA':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_Khelo_India_2023/Scenes/LT.sum' + ',' + $('#selectTeam option:selected').val() + ',' + 
-					$('#selectCaptainWicketKeeper option:selected').val() + ',' + $('#selectPlayer option:selected').val() ;
-				
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/LT_NameSuper.sum' + ',' + $('#selectTeam option:selected').val() + ',' + 
-				$('#selectCaptainWicketKeeper option:selected').val() + ',' + $('#selectPlayer option:selected').val() ;
-				break;
-			case 'VIZ_TRI_NATION':
-				value_to_process = '/Default/LT' + ',' + $('#selectTeam option:selected').val() + ',' + $('#selectCaptainWicketKeeper option:selected').val() + ',' + 
-					$('#selectPlayer option:selected').val() ;
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/LT' + ',' + $('#selectTeam option:selected').val() + ',' + $('#selectCaptainWicketKeeper option:selected').val() + ',' + 
-					$('#selectPlayer option:selected').val() ;
-				break;	
-		}
-		break;
-	case 'POPULATE-L3-NAMESUPER-CARD':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/LT_NameSuper_Cards.sum' + ',' + $('#selectTeam option:selected').val() + ',' + 
-					$('#selectCaptainWicketKeeper option:selected').val() + ',' + $('#selectPlayer option:selected').val() ;
-				//alert(value_to_process);
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/LT_NameSuper_Cards.sum' + ',' + $('#selectTeam option:selected').val() + ',' + 
-				$('#selectCaptainWicketKeeper option:selected').val() + ',' + $('#selectPlayer option:selected').val() ;
-				break;
-			case 'VIZ_TRI_NATION':
-				value_to_process = '/Default/LT' + ',' + $('#selectTeam option:selected').val() + ',' + 
-				$('#selectCaptainWicketKeeper option:selected').val() + ',' + $('#selectPlayer option:selected').val() ;
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/LT' + ',' + $('#selectTeam option:selected').val() + ',' + 
-				$('#selectCaptainWicketKeeper option:selected').val() + ',' + $('#selectPlayer option:selected').val() ;
-				break;
-		}
-		break;
-	case 'POPULATE-SCOREBUG-CARD':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE': case 'SANTOSH_TROPHY': case 'VIZ_TRI_NATION': case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = $('#selectTeam option:selected').val() + ',' + $('#selectCaptainWicketKeeper option:selected').val() + ',' + $('#selectPlayer option:selected').val() ;
-				//alert(value_to_process);
-				break;
-		}
-		break;
-	case 'POPULATE-L3-ASTON-ADS':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE':
-			value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Aston_AD.sum' ;
-			//alert(value_to_process);
-			break;
-		}
-		break;
-	case 'POPULATE-LT-BUG_REPLAY':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE':
-			value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Bug_Replay.sum' ;
-			//alert(value_to_process);
-			break;
-		case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/Bug_Replay.sum';
-			break;	
-		}
-		break;
-	case 'POPULATE-L3-MATCHPROMO':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE':
-			value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Promo.sum' ;
-			break;
-		}
-		break;
-	case 'POPULATE-QUAIFIERS':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'SUPER_CUP':
-				value_to_process = '/Default/Qualifier_winners';
-				break;
-		}
-		break;
-	case 'POPULATE-FF-TEAMS':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames';
-				break;
-		}
-		break;
-	case 'POPULATE-FF-MATCHID':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/MatchId.sum' ;
-				break;
-			case 'HOCKEY_KHELO_INDIA':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_Khelo_India_2023/Scenes/FF_MatchId.sum' ;
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/MatchID.sum';
-				break;
-			case 'VIZ_SANTOSH_TROPHY':
-				value_to_process = '/Default/GameIntro';
-				break;
-			case 'VIZ_TRI_NATION':
-				value_to_process = '/Default/FullFrames';
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames';
-				break;
-		}
-		break;
-	case 'POPULATE-LT-MATCHID':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'VIZ_SANTOSH_TROPHY':
-				value_to_process = '/Default/LtGameIntro';
-				break;
-			case 'VIZ_TRI_NATION':
-				value_to_process = '/Default/LT';
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/LT';
-				break;
-		}
-		break;
-	case 'POPULATE-FF-MATCHSTATS':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Score_Goalers.sum' ;
-			break;
-			case 'HOCKEY_KHELO_INDIA':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_Khelo_India_2023/Scenes/FF_Score.sum' ;
-			break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/Score_Goalers.sum';
-				break;
-			case 'VIZ_TRI_NATION':
-				value_to_process = '/Default/FullFrames';
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames';
-				break;
-		}
-		break;
-	case 'POPULATE-DOUBLE_PROMO':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Promo.sum' ;
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames' + ',' + $('#selectDoublePromo option:selected').val() ;
-				break;
-		}
-		break;
-	case 'POPULATE-HIGHLIGHT':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Bug.sum' ;
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/Bug.sum';
-				break;
-		}
-		break;
-	case 'POPULATE-ROAD-TO-FINAL':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Bug.sum' ;
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames';
-				break;
-		}
-		break;
-	case 'POPULATE-PLAYOFFS':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Bug.sum' ;
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames_Cut';
-				break;
-		}
-		break;
-	case 'POPULATE-FIXTURES':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames' + ',' + $('#selectFixturesHeader option:selected').val() ;
-				//alert(value_to_process);
-				break;
-		}
-		break;
-	case 'POPULATE-POINTS_TABLE2':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames' + ',' + $('#selectLeagueTable option:selected').val() ;
-				//alert(value_to_process);
-				break;
-		}
-		break;
-	case 'POPULATE-CONTINENTAL_POINTS_TABLE':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/PointsTable.sum' ;
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/PointsTable.sum' + ',' + $('#selectLeagueTable option:selected').val();
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames';
-				//alert(value_to_process);
-				break;
-		}
-		break;
-	case 'POPULATE-POINTS_TABLE':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/PointsTable.sum' ;
-				break;
-			case 'HOCKEY_KHELO_INDIA':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_Khelo_India_2023/Scenes/FF_PointsTable.sum';
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/PointsTable.sum' + ',' + $('#selectLeagueTable option:selected').val();
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames';
-				//alert(value_to_process);
-				break;
-		}
-		break;
-	case 'POPULATE-L3-SUBSTITUTE':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/LT_Subsitutes_Multi.sum' + ',' + $('#selectTeam option:selected').val()
-					+ ',' + $('#selectStatsType option:selected').val() ;
-				//alert(value_to_process);
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/LT_Substitutes_Multi.sum' + ',' + $('#selectTeam option:selected').val()
-					+ ',' + $('#selectStatsType option:selected').val() ;
-				//alert(value_to_process);
-				break;
-			case 'VIZ_TRI_NATION':
-				value_to_process = '/Default/LT' + ',' + $('#selectTeam option:selected').val()
-					+ ',' + $('#selectStatsType option:selected').val() ;
-				//alert(value_to_process);
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/LT' + ',' + $('#selectTeam option:selected').val() + ',' + $('#selectStatsType option:selected').val() ;
-				//alert(value_to_process);
-				break;	
-		}
-		break;
-	case 'POPULATE-L3-SINGLE_SUBSTITUTE':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/LT_Subsitutes.sum' + ',' + $('#selectSingleSubTeam option:selected').val() ;
-				//alert(value_to_process);
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/LT_Substitutes.sum' + ',' + $('#selectSingleSubTeam option:selected').val() ;
-				//alert(value_to_process);
-				break;
-		}
-		break;
-	case 'POPULATE-FF-PLAYINGXI':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/TeamLineUp_Subs.sum' + ',' + 
-					$('#selectPlayingXI option:selected').val();
-				break;
-			case 'HOCKEY_KHELO_INDIA':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_Khelo_India_2023/Scenes/FF_LineUp.sum' + ',' + 
-					$('#selectPlayingXI option:selected').val();
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/TeamLineUp_Subs.sum' + ',' + $('#selectPlayingXI option:selected').val();
-				break;
-			case 'VIZ_SANTOSH_TROPHY':
-				value_to_process = '/Default/LineUp' + ',' + $('#selectPlayingXI option:selected').val();
-				break;
-			case 'VIZ_TRI_NATION':
-				value_to_process = '/Default/FullFrames' + ',' + $('#selectPlayingXI option:selected').val() + ',' + $('#selectPlayingXIType option:selected').val();
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames' + ',' + $('#selectPlayingXI option:selected').val() + ',' + $('#selectPlayingXIType option:selected').val();
-				break;	
-		}
-		break;
-	case 'POPULATE-FF-PLAYINGXI_CHANGEON':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/TeamLineUp_Subs_Change.sum' + ',' + $('#selectPlayingXI option:selected').val();
-				break;
-		}
-		break;
+	
 	case 'POPULATE-L3-BUG-DB':
 		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = $('#bugdbScene').val() + ',' + $('#selectBugdb option:selected').val() ;
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = $('#bugdbScene').val() + ',' + $('#selectBugdb option:selected').val() ;
-				break;	
-		}
-		break;
-	case 'POPULATE-L3-SCOREUPDATE':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/LT_ScoreUpdate.sum';
-				break;
-			case 'SANTOSH_TROPHY':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/LT_ScoreUpdate.sum';
-				break;
-			case 'VIZ_SANTOSH_TROPHY':
-				value_to_process = '/Default/LtGameIntro';
-				break;
-			case 'VIZ_TRI_NATION':
-				value_to_process = '/Default/LT';
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/LT';
+			case 'POLO':
+				value_to_process = $('#selectBugdb option:selected').val() ;
 				break;
 		}
 		break;
-	case 'POPULATE-L3-MATCHSTATUS':
-		switch ($('#selectedBroadcaster').val()) {
-			case 'I_LEAGUE':
-				value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/MatchStats.sum';
-				break;
-			case 'VIZ_TRI_NATION':
-				value_to_process = '/Default/FullFrames';
-				break;
-			case 'SUPER_CUP': case 'CONTINENTAL':
-				value_to_process = '/Default/FullFrames';
-				break;
-		}
-		break;
-	case 'POPULATE-SCOREBUG':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE':
-			value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/ScoreBug.sum';
-			//value_to_process = match_data.matchFileName + ',' + 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/ScoreBug.sum';
-			break;
-		case 'HOCKEY_KHELO_INDIA':
-			value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_Khelo_India_2023/Scenes/Footaball_Scorebug.sum';
-			break;
-		case 'SANTOSH_TROPHY':
-			value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/ScoreBug.sum';
-			break;
-		}
-		break;
-	case 'POPULATE-SCOREBUG_STATS':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE':
-			value_to_process = $('#selectScorebugstats option:selected').val() ;
-			break;
-		case 'VIZ_TRI_NATION':
-			value_to_process = $('#selectScorebugstats option:selected').val() + ',' + $('#selecthomedata').val() + ',' + $('#selectawaydata').val() ;
-			break;
-		case 'SUPER_CUP': case 'CONTINENTAL':
-			value_to_process = $('#selectScorebugstats option:selected').val() + ',' + $('#selecthomedata').val() + ',' + $('#selectawaydata').val() ;
-			break;
-		}
-		break
-	case 'POPULATE-SCOREBUG_STATS_TWO':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE':
-			value_to_process = $('#selectScorebugstatstwo option:selected').val() ;
-			break;
-		}
-		break
-	case 'POPULATE-EXTRA_TIME':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE': case 'SANTOSH_TROPHY': case 'VIZ_SANTOSH_TROPHY': case 'VIZ_TRI_NATION': case 'SUPER_CUP': case 'CONTINENTAL':
-			value_to_process = $('#selectExtratime').val();
-			break;
-		}
-		break;
-	case 'POPULATE-RED_CARD':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'VIZ_TRI_NATION':
-			value_to_process = $('#selecthometeamredcard').val() + ',' + $('#selectawayteamredcard').val();
-			break;
-		case 'SUPER_CUP': case 'CONTINENTAL':
-			value_to_process = $('#selecthometeamredcard').val() + ',' + $('#selectawayteamredcard').val();
-			break;
-		}
-		break;
-	case 'POPULATE-EXTRA_TIME_BOTH':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE': case 'SANTOSH_TROPHY': case 'VIZ_SANTOSH_TROPHY': case 'VIZ_TRI_NATION': case 'SUPER_CUP': case 'CONTINENTAL':
-			value_to_process = $('#selectExtratimeBoth').val();
-			break;
-		}
-		break;
-	case 'POPULATE-HERO-SPONSOR':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE':
-			//value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Aston_AD.sum' + ',' + $('#selectSponsor option:selected').val();
-			value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Aston_AD.sum' + ',' + 'DESTINI';
-			break;
-		}
-		break;
-	case 'POPULATE-FF-FORMATION':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE':
-			//value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Formation.sum' + ',' + $('#selectTeam option:selected').val();
-			value_to_process = formationScene + ',' + $('#selectTeam option:selected').val() + ',' + $('#selectStatsType option:selected').val();
-			break;
-		case 'SANTOSH_TROPHY':
-			//value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Formation.sum' + ',' + $('#selectTeam option:selected').val();
-			value_to_process = formationScene + ',' + $('#selectTeam option:selected').val() + ',' + $('#selectStatsType option:selected').val();
-			break;
-		}
-		break;
-	case 'POPULATE-SCOREBUG-SUBS':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE': case 'SANTOSH_TROPHY': case 'VIZ_TRI_NATION': case 'SUPER_CUP': case 'CONTINENTAL':
-			value_to_process = $('#selectTeam option:selected').val() + ',' + $('#selectStatsType option:selected').val();
-			break;	
-		}
-		break;
-	case 'ANIMATE-CHANGE_ON_FORMATION':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE':
-			//value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Formation.sum' + ',' + $('#selectTeam option:selected').val();
-			value_to_process = $('#selectTeam option:selected').val() + ',' + $('#selectStatsType option:selected').val();
-			break;
-		}
-		break;
-	case 'POPULATE-DOUBLE_SUBS':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE':
-			value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Subs_BothTeam.sum';
-			break;
-		}
-		break;
-	case 'POPULATE-OFFICIALS':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE':
-			value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/LT_Officials.sum';
-			break;
-		case 'SANTOSH_TROPHY':
-			value_to_process = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/LT_Officials.sum';
-			break;
-		case 'VIZ_TRI_NATION':
-			value_to_process = '/Default/LT';
-			break;
-		case 'SUPER_CUP': case 'CONTINENTAL':
-			value_to_process = '/Default/LT';
-			break;
-		}
-		break;		
 	}
 	
 	if(match_data){
@@ -1259,142 +663,21 @@ function processPoloProcedures(whatToProcess, whichInput)
 						session_match = data;
 						addItemsToList('LOAD_MATCH',data);
 						addItemsToList('LOAD_EVENTS',data);
+						addItemsToList('LOAD_SET',data);
 						document.getElementById('select_event_div').style.display = 'none';
 					}
 				}
 				break;
-			case 'POPULATE-SUBS_CHANGE_ON':
-				processPoloProcedures('ANIMATE-IN-SUBS_CHANGE_ON');	
-				break;
-			case 'POPULATE-FF-MATCHID': case 'POPULATE-FF-PLAYINGXI': case 'POPULATE-L3-MATCHSTATUS': case 'POPULATE-L3-MATCHPROMO': case 'POPULATE-FF-MATCHSTATS':
-			case 'POPULATE-FF-PROMO': case 'POPULATE-DOUBLE_PROMO': case 'POPULATE-HERO-SPONSOR': case 'POPULATE-POINTS_TABLE': case 'POPULATE-FF-FORMATION':
-			case 'POPULATE-DOUBLE_SUBS': case 'POPULATE-OFFICIALS': case 'POPULATE-HIGHLIGHT': case 'POPULATE-PENALTY': case 'POPULATE-FF-PLAYINGXI_CHANGEON':
-			case 'POPULATE-LT-MATCHID': case 'POPULATE-HOMESUB': case 'POPULATE-AWAYXI': case 'POPULATE-AWAYSUB': case 'POPULATE-FF-TEAMS': case 'POPULATE-FIXTURES':
-			case 'POPULATE-QUAIFIERS': case 'POPULATE-LT-PROMO': case 'POPULATE-POINTS_TABLE2': case 'POPULATE-PLAYOFFS': case 'POPULATE-LT-RESULT': case 'POPULATE-ROAD-TO-FINAL':
-			case 'POPULATE-CONTINENTAL_POINTS_TABLE':	
-				if(confirm('Animate In?') == true){
-					switch(whatToProcess){
-					case 'POPULATE-ROAD-TO-FINAL':
-						processPoloProcedures('ANIMATE-IN-ROAD-TO-FINAL');			
-						break;
-					case 'POPULATE-PLAYOFFS':
-						processPoloProcedures('ANIMATE-IN-PLAYOFFS');			
-						break;
-					case 'POPULATE-HOMESUB':
-						processPoloProcedures('ANIMATE-IN-HOMESUB');			
-						break;
-					case 'POPULATE-AWAYXI':
-						processPoloProcedures('ANIMATE-IN-AWAYXI');			
-						break;
-					case 'POPULATE-AWAYSUB':
-						processPoloProcedures('ANIMATE-IN-AWAYSUB');			
-						break;
-					case 'POPULATE-PENALTY':
-						processPoloProcedures('ANIMATE-IN-PENALTY');			
-						break;
-					case 'POPULATE-HIGHLIGHT':
-						processPoloProcedures('ANIMATE-IN-HIGHLIGHT');			
-						break;
-					case 'POPULATE-FF-TEAMS':
-						processPoloProcedures('ANIMATE-IN-FF_TEAMS');			
-						break;
-					case 'POPULATE-FF-MATCHID':
-						processPoloProcedures('ANIMATE-IN-MATCHID');			
-						break;
-					case 'POPULATE-LT-MATCHID':
-						processPoloProcedures('ANIMATE-IN-LT_MATCHID');			
-						break;
-					case 'POPULATE-FF-MATCHSTATS':
-						processPoloProcedures('ANIMATE-IN-MATCHSTATS');		
-						break;
-					case 'POPULATE-DOUBLE_PROMO':
-						processPoloProcedures('ANIMATE-IN-DOUBLE_PROMO');
-						break;
-					case 'POPULATE-FF-PLAYINGXI':
-						processPoloProcedures('ANIMATE-IN-PLAYINGXI');		
-						break;
-					case 'POPULATE-FF-PLAYINGXI_CHANGEON':
-						processPoloProcedures('ANIMATE-IN-PLAYINGXI_CHANGEON');		
-						break;
-					case 'POPULATE-L3-MATCHSTATUS':
-						processPoloProcedures('ANIMATE-IN-MATCHSTATUS');
-						break;
-					case 'POPULATE-L3-MATCHPROMO':
-						processPoloProcedures('ANIMATE-IN-MATCHPROMO');
-						break;
-					case 'POPULATE-LT-PROMO':
-						processPoloProcedures('ANIMATE-IN-LTPROMO');
-						break;
-					case 'POPULATE-LT-RESULT':
-						processPoloProcedures('ANIMATE-IN-RESULT');
-						break;
-					case 'POPULATE-FF-PROMO':
-						processPoloProcedures('ANIMATE-IN-PROMO');
-						break;
-					case 'POPULATE-HERO-SPONSOR':
-						processPoloProcedures('ANIMATE-IN-ASTON-ADS');
-						break;
-					case 'POPULATE-CONTINENTAL_POINTS_TABLE':
-						processPoloProcedures('ANIMATE-IN-POINTS_TABLE');
-						break;
-					case 'POPULATE-POINTS_TABLE':
-						processPoloProcedures('ANIMATE-IN-POINTS_TABLE');
-						break;
-					case 'POPULATE-POINTS_TABLE2':
-						processPoloProcedures('ANIMATE-IN-POINTS_TABLE2');
-						break;
-					case 'POPULATE-FIXTURES':
-						processPoloProcedures('ANIMATE-IN-FIXTURES');
-						break;
-					case 'POPULATE-QUAIFIERS':
-						processPoloProcedures('ANIMATE-IN-QUAIFIERS');
-						break;
-					case 'POPULATE-FF-FORMATION':
-						processPoloProcedures('ANIMATE-IN-FORMATION');
-						break;
-					case 'POPULATE-DOUBLE_SUBS':
-						processPoloProcedures('ANIMATE-IN-DOUBLE_SUBS');
-						break;
-					case 'POPULATE-OFFICIALS':
-						processPoloProcedures('ANIMATE-IN-OFFICIALS');
-						break;
-					}
-				}
-				break;
-			case 'POPULATE-L3-HEATMAP':
-				if(data.api_photo =='SUCCESS'){
-					if(confirm('Animate In?') == true){
-						switch(whatToProcess){
-							case 'POPULATE-L3-HEATMAP':
-							processPoloProcedures('ANIMATE-IN-HEATMAP');				
-							break;
-						}
-					}
-				}else{
-					alert('file does not exist!')
-				}
-				break;
 				
-			case 'POPULATE-SCOREBUG': case 'POPULATE-L3-NAMESUPER': case 'POPULATE-L3-NAMESUPER-PLAYER':  case 'POPULATE-L3-TOP_STATS':
-			case 'POPULATE-L3-BUG-DB': case 'POPULATE-L3-SCOREUPDATE':  case 'POPULATE-L3-NAMESUPER-CARD':
-			case 'POPULATE-L3-SUBSTITUTE':  case 'POPULATE-L3-STAFF':  case 'POPULATE-LT-BUG_REPLAY': case 'POPULATE-L3-SINGLE_SUBSTITUTE':
+			case 'POPULATE-SCOREBUG': case 'POPULATE-SCOREBUG_WITHTIME': case 'POPULATE-L3-SCOREUPDATE': case 'POPULATE-L3-BUG-DB':
 			
 				if(confirm('Animate In?') == true){
 					switch(whatToProcess){
 					case 'POPULATE-SCOREBUG':
 						processPoloProcedures('ANIMATE-IN-SCOREBUG');				
 						break;
-					case 'POPULATE-L3-TOP_STATS':
-						processPoloProcedures('ANIMATE-IN-TOP_STATS');				
-						break;
-					case 'POPULATE-L3-NAMESUPER':
-						processPoloProcedures('ANIMATE-IN-NAMESUPERDB');				
-						break;
-					case 'POPULATE-L3-NAMESUPER-PLAYER':
-						processPoloProcedures('ANIMATE-IN-NAMESUPER');				
-						break;
-					case 'POPULATE-L3-NAMESUPER-CARD':
-						processPoloProcedures('ANIMATE-IN-NAMESUPER_CARD');				
+					case 'POPULATE-SCOREBUG_WITHTIME':
+						processPoloProcedures('ANIMATE-IN-SCOREBUG_WITHTIME');				
 						break;
 					case 'POPULATE-L3-BUG-DB':
 						processPoloProcedures('ANIMATE-IN-BUG-DB');
@@ -1402,51 +685,20 @@ function processPoloProcedures(whatToProcess, whichInput)
 					case 'POPULATE-L3-SCOREUPDATE':
 						processPoloProcedures('ANIMATE-IN-SCOREUPDATE');
 						break;
-					case 'POPULATE-LT-BUG_REPLAY':
-						processPoloProcedures('ANIMATE-IN-BUG_REPLAY');
-						break;
-					case 'POPULATE-L3-SUBSTITUTE':
-						processPoloProcedures('ANIMATE-IN-SUBSTITUTE');
-						break;
-					case 'POPULATE-L3-SINGLE_SUBSTITUTE':
-						processPoloProcedures('ANIMATE-IN-SINGLE_SUBSTITUTE');
-						break;
-					case 'POPULATE-L3-STAFF':
-						processPoloProcedures('ANIMATE-IN-STAFF');
-						break;
 					}
 				}
 				break;
-			case 'NAMESUPER_GRAPHICS-OPTIONS':
-				addItemsToList('NAMESUPER-OPTIONS',data);
-				break;
-			case 'STAFF_GRAPHICS-OPTIONS':
-				//alert(home_team);
-				addItemsToList('STAFF-OPTIONS',data);
-				break;
-			case 'RESULT_PROMO_GRAPHICS-OPTIONS':
-				addItemsToList('RESULT_PROMO-OPTIONS',data);
-				break;
-			case 'PROMO_GRAPHICS-OPTIONS':
-				addItemsToList('MATCH-PROMO-OPTIONS',data);
-				break;
-			case 'SCOREBUGPROMO_GRAPHICS-OPTIONS':
-				addItemsToList('SCOREBUGPROMO-OPTIONS',data);
-				break;
-			case 'LTPROMO_GRAPHICS-OPTIONS':
-				addItemsToList('LT_MATCH-PROMO-OPTIONS',data);
-				break;	
+				
 			case 'BUG_DB_GRAPHICS-OPTIONS':
 				addItemsToList('BUG_DB-OPTIONS',data);
 				addItemsToList('POPULATE-BUG-SCENE',data);
 				break;
-			case 'APIDATA_GRAPHICS-OPTIONS':
-				addItemsToList('APIDATA-OPTIONS',data);				
-				break;
 								
     		case 'LOG_OVERWRITE_MATCH_SUBS': case 'UNDO': case 'REPLACE': case 'LOG_GOALS': case 'UPDATE_SCORE_USING_TXT':
+    		case 'LOG_SET':
         		addItemsToList('LOAD_MATCH',data);
 				addItemsToList('LOAD_EVENTS',data);
+				addItemsToList('LOAD_SET',data);
 				document.getElementById('select_event_div').style.display = 'none';
         		break;
         	case 'LOAD_TEAMS':
@@ -1454,8 +706,10 @@ function processPoloProcedures(whatToProcess, whichInput)
         		break;	
 			case 'LOG_EVENT': case 'LOAD_MATCH':
         		addItemsToList('LOAD_MATCH',data);
+        		addItemsToList('LOAD_SET',data);
 	        	switch(whatToProcess) {
 	        	case 'LOAD_MATCH':
+	        		document.getElementById('select_set_div').style.display = '';
 					document.getElementById('polo_div').style.display = '';
 					document.getElementById('select_event_div').style.display = 'none';
 					setInterval(displayMatchTime, 500);
@@ -1516,44 +770,11 @@ function addItemsToList(whatToProcess, dataToProcess)
 		}
 		
 		break;
-	
-	case 'POPULATE-BUG-SCENE':
-	
-		$('#bugdbScene').empty();
-		dataToProcess.forEach(function(bug,index,arr1){
-			switch ($('#selectedBroadcaster').val().toUpperCase()) {
-			case 'I_LEAGUE':
-				if(bug.bugId == $('#selectBugdb option:selected').val()){
-					if(bug.text2 == ''){
-						document.getElementById('bugdbScene').value= 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Bug.sum';
-					}else{
-						document.getElementById('bugdbScene').value= 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Bug.sum';
-					}
-				}
-				break;
-			case 'SANTOSH_TROPHY':
-				if(bug.bugId == $('#selectBugdb option:selected').val()){
-					if(bug.text2 == ''){
-						document.getElementById('bugdbScene').value= 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/Bug.sum';
-					}else{
-						document.getElementById('bugdbScene').value= 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/Bug.sum';
-					}
-				}
-				break;	
-			}
-			
-		});
-		break;
-	
-	case 'NAMESUPER-OPTIONS': case "NAMESUPER_PLAYER-OPTIONS": case'PLAYINGXI-OPTIONS': case 'API-OPTIONS':case 'BUG_DB-OPTIONS': case 'NAMESUPER-CARD-OPTIONS': 
-	case 'STAFF-OPTIONS': case 'MATCH-PROMO-OPTIONS':case 'AD-OPTIONS': case 'SUBSTITUTE-OPTIONS': case 'FORMATION-OPTIONS': case 'SCOREBUG-CARD-OPTIONS':
-	case 'SCOREBUG-SUBSTITUTION-OPTIONS': case 'SINGLE_SUBSTITUTE-OPTIONS': case 'HEATMAP_PEAKDISTACE-OPTION': case 'LT_MATCH-PROMO-OPTIONS': case 'SCOREBUGPROMO-OPTIONS':
-	case 'TOP_STATS-OPTIONS': case 'FIXTURES-OPTIONS': case 'POINT_TABLE-OPTIONS': case 'DOUBLE_PROMO-OPTIONS': case 'POINTS_TABLE2_OPTION': case 'RESULT_PROMO-OPTIONS':
+		
+	case 'BUG_DB-OPTIONS':
 	
 		switch ($('#selectedBroadcaster').val().toUpperCase()) {
-		case 'I_LEAGUE': case 'SANTOSH_TROPHY': case 'VIZ_SANTOSH_TROPHY': case 'VIZ_TRI_NATION': case 'SUPER_CUP': case 'CONTINENTAL':
-		case 'HOCKEY_KHELO_INDIA':
-
+		case 'POLO':
 			$('#select_graphic_options_div').empty();
 	
 			header_text = document.createElement('h6');
@@ -1570,1170 +791,7 @@ function addItemsToList(whatToProcess, dataToProcess)
 			
 			row = tbody.insertRow(tbody.rows.length);
 			
-			switch(whatToProcess){
-				case 'DOUBLE_PROMO-OPTIONS':
-					switch ($('#selectedBroadcaster').val().toUpperCase()){
-						case 'SUPER_CUP': case 'CONTINENTAL':
-							select = document.createElement('select');
-							select.id = 'selectDoublePromo';
-							select.name = select.id;
-							
-							option = document.createElement('option');
-							option.value = 'TODAY';
-							option.text = 'TODAY';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'TOMORROW';
-							option.text = 'TOMORROW';
-							select.appendChild(option);
-							
-							row.insertCell(0).appendChild(select);
-							
-							option = document.createElement('input');
-				    		option.type = 'button';
-				    		
-				    		option.name = 'populate_double_promo_btn';
-				    		option.value = 'Populate Double Promo';
-				    		
-				    		option.id = option.name;
-						    option.setAttribute('onclick',"processUserSelection(this)");
-						    
-						    div = document.createElement('div');
-						    div.append(option);
-						    
-						    row.insertCell(1).appendChild(div);
-						    
-							option = document.createElement('input');
-							option.type = 'button';
-							option.name = 'cancel_graphics_btn';
-							option.id = option.name;
-							option.value = 'Cancel';
-							option.setAttribute('onclick','processUserSelection(this)');
-					
-						    div.append(option);
-						    
-						    row.insertCell(2).appendChild(div);
-							document.getElementById('select_graphic_options_div').style.display = '';
-							break;
-						}
-					break;
-				case 'FIXTURES-OPTIONS':
-					switch ($('#selectedBroadcaster').val().toUpperCase()){
-						case 'SUPER_CUP': case 'CONTINENTAL':
-						
-						select = document.createElement('select');
-						select.id = 'selectFixturesHeader';
-						select.name = select.id;
-						
-						option = document.createElement('option');
-						option.value = 'fixture';
-						option.text = 'Fixture';
-						select.appendChild(option);
-						
-						option = document.createElement('option');
-						option.value = 'result';
-						option.text = 'Result';
-						select.appendChild(option);
-						
-						row.insertCell(0).appendChild(select);
-						
-						option = document.createElement('input');
-			    		option.type = 'button';
-			    		
-			    		option.name = 'populate_fixtures_btn';
-			    		option.value = 'Populate Fixtures';
-			    		
-			    		option.id = option.name;
-					    option.setAttribute('onclick',"processUserSelection(this)");
-					    
-					    div = document.createElement('div');
-					    div.append(option);
-					    
-					    row.insertCell(1).appendChild(div);
-					    
-						option = document.createElement('input');
-						option.type = 'button';
-						option.name = 'cancel_graphics_btn';
-						option.id = option.name;
-						option.value = 'Cancel';
-						option.setAttribute('onclick','processUserSelection(this)');
-				
-					    div.append(option);
-					    
-					    row.insertCell(2).appendChild(div);
-						document.getElementById('select_graphic_options_div').style.display = '';
-						break;
-					}
-						
-					break;
-				case 'POINTS_TABLE2_OPTION':
-					switch ($('#selectedBroadcaster').val().toUpperCase()){
-						case 'SUPER_CUP': case 'CONTINENTAL':
-							select = document.createElement('select');
-							select.id = 'selectLeagueTable';
-							select.name = select.id;
-							
-							option = document.createElement('option');
-							option.value = 'SemiFinal1';
-							option.text = 'Semi Final 1';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'SemiFinal2';
-							option.text = 'Semi Final 2';
-							select.appendChild(option);
-							
-							row.insertCell(0).appendChild(select);
-							
-							option = document.createElement('input');
-				    		option.type = 'button';
-				    		
-				    		option.name = 'populate_points_table2_btn';
-				    		option.value = 'Populate Points-Table';
-				    		
-				    		option.id = option.name;
-						    option.setAttribute('onclick',"processUserSelection(this)");
-						    
-						    div = document.createElement('div');
-						    div.append(option);
-						    
-						    row.insertCell(1).appendChild(div);
-						    
-							option = document.createElement('input');
-							option.type = 'button';
-							option.name = 'cancel_graphics_btn';
-							option.id = option.name;
-							option.value = 'Cancel';
-							option.setAttribute('onclick','processUserSelection(this)');
-					
-						    div.append(option);
-						    
-						    row.insertCell(2).appendChild(div);
-							document.getElementById('select_graphic_options_div').style.display = '';
-							break;
-					}
-					break;
-				case 'POINT_TABLE-OPTIONS':
-					switch ($('#selectedBroadcaster').val().toUpperCase()){
-						case 'SUPER_CUP': case 'CONTINENTAL':
-							select = document.createElement('select');
-							select.id = 'selectLeagueTable';
-							select.name = select.id;
-							
-							option = document.createElement('option');
-							option.value = 'LeagueTableA';
-							option.text = 'Group A League Table';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'LeagueTableB';
-							option.text = 'Group B League Table';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'LeagueTableC';
-							option.text = 'Group C League Table';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'LeagueTableD';
-							option.text = 'Group D League Table';
-							select.appendChild(option);
-							
-							row.insertCell(0).appendChild(select);
-							break;
-						case 'SANTOSH_TROPHY': 
-							select = document.createElement('select');
-				
-							select.id = 'selectLeagueTable';
-							select.name = select.id;
-							
-							option = document.createElement('option');
-							option.value = 'LeagueTableA';
-							option.text = 'Group A League Table';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'LeagueTableB';
-							option.text = 'Group B League Table';
-							select.appendChild(option);
-							
-							row.insertCell(0).appendChild(select);
-							break;
-					}
-					option = document.createElement('input');
-		    		option.type = 'button';
-		    		
-		    		option.name = 'populate_points_table_btn';
-		    		option.value = 'Populate Points-Table';
-		    		
-		    		option.id = option.name;
-				    option.setAttribute('onclick',"processUserSelection(this)");
-				    
-				    div = document.createElement('div');
-				    div.append(option);
-				    
-				    row.insertCell(1).appendChild(div);
-				    
-					option = document.createElement('input');
-					option.type = 'button';
-					option.name = 'cancel_graphics_btn';
-					option.id = option.name;
-					option.value = 'Cancel';
-					option.setAttribute('onclick','processUserSelection(this)');
-			
-				    div.append(option);
-				    
-				    row.insertCell(2).appendChild(div);
-					document.getElementById('select_graphic_options_div').style.display = '';
-					break;
-				case 'SCOREBUG-SUBSTITUTION-OPTIONS':					
-					switch ($('#selectedBroadcaster').val().toUpperCase()){
-					case 'VIZ_TRI_NATION': case 'SUPER_CUP': case 'CONTINENTAL':
-						select = document.createElement('select');
-						select.id = 'selectTeam';
-						select.name = select.id;
-						
-						option = document.createElement('option');
-						option.value = match_data.homeTeamId;
-						option.text = match_data.homeTeam.teamName1;
-						select.appendChild(option);
-						
-						option = document.createElement('option');
-						option.value = match_data.awayTeamId;
-						option.text = match_data.awayTeam.teamName1;
-						select.appendChild(option);
-						
-						row.insertCell(cellCount).appendChild(select);
-						cellCount = cellCount + 1;
-						
-						select = document.createElement('select');
-						select.id = 'selectStatsType';
-						select.name = select.id;
-						
-						option = document.createElement('option');
-						option.value = 'single';
-						option.text = 'Single Substitution';
-						select.appendChild(option);
-						
-						option = document.createElement('option');
-						option.value = 'double';
-						option.text = 'Double Substitution';
-						select.appendChild(option);
-						
-						option = document.createElement('option');
-						option.value = 'triple';
-						option.text = 'Triple Substitution';
-						select.appendChild(option);
-						
-					    select.setAttribute('onchange',"processUserSelection(this)");
-						row.insertCell(cellCount).appendChild(select);
-						cellCount = cellCount + 1;
-						
-						option = document.createElement('input');
-			    		option.type = 'button';
-			    		
-			    		option.name = 'populate_sub_btn';
-			    		option.value = 'ChangeOn';
-			    		
-			    		option.id = option.name;
-					    option.setAttribute('onclick',"processUserSelection(this)");
-					    
-					    div = document.createElement('div');
-						div.append(option);
-							    
-					    row.insertCell(cellCount).appendChild(div);
-						cellCount = cellCount + 1;
-						
-						option = document.createElement('input');
-			    		option.type = 'button';
-			    		
-			    		option.name = 'populate_scorebug_subs_btn';
-			    		option.value = 'Populate Subs';
-			    		
-			    		option.id = option.name;
-					    option.setAttribute('onclick',"processUserSelection(this)");
-					    
-					    div = document.createElement('div');
-					    div.append(option);
-					    
-					    row.insertCell(cellCount).appendChild(div);
-					    cellCount = cellCount + 1;
-					    
-						option = document.createElement('input');
-						option.type = 'button';
-						option.name = 'cancel_graphics_btn';
-						option.id = option.name;
-						option.value = 'Cancel';
-						option.setAttribute('onclick','processUserSelection(this)');
-				
-					    div.append(option);
-					    
-					    row.insertCell(cellCount).appendChild(div);
-					    cellCount = cellCount + 1;
-					    
-						document.getElementById('select_graphic_options_div').style.display = '';
-						break;
-					case 'I_LEAGUE': case 'SANTOSH_TROPHY': case 'VIZ_SANTOSH_TROPHY':
-						select = document.createElement('select');
-						select.id = 'selectTeam';
-						select.name = select.id;
-						
-						option = document.createElement('option');
-						option.value = match_data.homeTeamId;
-						option.text = match_data.homeTeam.teamName1;
-						select.appendChild(option);
-						
-						option = document.createElement('option');
-						option.value = match_data.awayTeamId;
-						option.text = match_data.awayTeam.teamName1;
-						select.appendChild(option);
-						
-						row.insertCell(cellCount).appendChild(select);
-						cellCount = cellCount + 1;
-						
-						select = document.createElement('select');
-						select.id = 'selectStatsType';
-						select.name = select.id;
-						
-						option = document.createElement('option');
-						option.value = 'single';
-						option.text = 'Single Substitution';
-						select.appendChild(option);
-						
-					    select.setAttribute('onchange',"processUserSelection(this)");
-						row.insertCell(cellCount).appendChild(select);
-						
-						cellCount = cellCount + 1;
-						
-						option = document.createElement('input');
-			    		option.type = 'button';
-			    		
-			    		option.name = 'populate_scorebug_subs_btn';
-			    		option.value = 'Populate Subs';
-			    		
-			    		option.id = option.name;
-					    option.setAttribute('onclick',"processUserSelection(this)");
-					    
-					    div = document.createElement('div');
-					    div.append(option);
-					    
-					    row.insertCell(cellCount).appendChild(div);
-					    cellCount = cellCount + 1;
-					    
-						option = document.createElement('input');
-						option.type = 'button';
-						option.name = 'cancel_graphics_btn';
-						option.id = option.name;
-						option.value = 'Cancel';
-						option.setAttribute('onclick','processUserSelection(this)');
-				
-					    div.append(option);
-					    
-					    row.insertCell(cellCount).appendChild(div);
-					    cellCount = cellCount + 1;
-					    
-						document.getElementById('select_graphic_options_div').style.display = '';
-						break;
-					}
-					break;
-				case 'FORMATION-OPTIONS':
-					switch ($('#selectedBroadcaster').val().toUpperCase()) {
-					case 'I_LEAGUE':
-						formationScene = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_I-League_2022/Scenes/Formation_NO_Image.sum';
-						break;
-					case 'SANTOSH_TROPHY':
-						formationScene = 'D:/DOAD_In_House_Everest/Everest_Sports/Everest_SantoshTrophy_2023/Scenes/Formation_NO_Image.sum';
-						break;
-					}
-					select = document.createElement('select');
-					
-					select.id = 'selectTeam';
-					select.name = select.id;
-					
-					option = document.createElement('option');
-					option.value = match_data.homeTeamId;
-					option.text = match_data.homeTeam.teamName1;
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = match_data.awayTeamId;
-					option.text = match_data.awayTeam.teamName1;
-					select.appendChild(option);
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					
-					select = document.createElement('select');
-					select.id = 'selectStatsType';
-					select.name = select.id;
-					
-					option = document.createElement('option');
-					option.value = 'Formation_without_image';
-					option.text = 'Formation Without Image';
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = 'Formation_with_image';
-					option.text = 'Formation With Image';
-					select.appendChild(option);
-					
-				    select.setAttribute('onchange',"processUserSelection(this)");
-					row.insertCell(cellCount).appendChild(select);
-					
-					cellCount = cellCount + 1;
-					
-					option = document.createElement('input');
-		    		option.type = 'button';
-		    		
-		    		option.name = 'populate_formation_btn';
-		    		option.value = 'Populate Formation';
-		    		
-		    		option.id = option.name;
-				    option.setAttribute('onclick',"processUserSelection(this)");
-				    
-				    div = document.createElement('div');
-				    div.append(option);
-				    
-				    row.insertCell(cellCount).appendChild(div);
-				    cellCount = cellCount + 1;
-				    
-				   /* option = document.createElement('input');
-		    		option.type = 'button';
-		    		
-		    		option.name = 'change_on_formation';
-		    		option.value = 'Change On';
-		    		
-		    		option.id = option.name;
-				    option.setAttribute('onclick',"processUserSelection(this)");*/
-				    
-				    div = document.createElement('div');
-				    div.append(option);
-					
-					row.insertCell(cellCount).appendChild(div);
-				    cellCount = cellCount + 1;
-				    
-					option = document.createElement('input');
-					option.type = 'button';
-					option.name = 'cancel_graphics_btn';
-					option.id = option.name;
-					option.value = 'Cancel';
-					option.setAttribute('onclick','processUserSelection(this)');
-			
-				    div.append(option);
-				    
-				    row.insertCell(cellCount).appendChild(div);
-				    cellCount = cellCount + 1;
-				    
-					document.getElementById('select_graphic_options_div').style.display = '';
-					break;
-				case 'SINGLE_SUBSTITUTE-OPTIONS':
-					select = document.createElement('select');
-					select.id = 'selectSingleSubTeam';
-					select.name = select.id;
-					
-					option = document.createElement('option');
-					option.value = match_data.homeTeamId;
-					option.text = match_data.homeTeam.teamName1;
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = match_data.awayTeamId;
-					option.text = match_data.awayTeam.teamName1;
-					select.appendChild(option);
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					
-					option = document.createElement('input');
-		    		option.type = 'button';
-		    		
-		    		option.name = 'populate_single_substitution_btn';
-		    		option.value = 'Populate Substitution';
-		    		
-		    		option.id = option.name;
-				    option.setAttribute('onclick',"processUserSelection(this)");
-				    
-				    div = document.createElement('div');
-				    div.append(option);
-				    
-				    row.insertCell(cellCount).appendChild(div);
-				    cellCount = cellCount + 1;
-				    
-					option = document.createElement('input');
-					option.type = 'button';
-					option.name = 'cancel_graphics_btn';
-					option.id = option.name;
-					option.value = 'Cancel';
-					option.setAttribute('onclick','processUserSelection(this)');
-			
-				    div.append(option);
-				    
-				    row.insertCell(cellCount).appendChild(div);
-				    cellCount = cellCount + 1;
-				    
-					document.getElementById('select_graphic_options_div').style.display = '';
-					break;	
-				case 'SUBSTITUTE-OPTIONS':
-					select = document.createElement('select');
-					select.id = 'selectTeam';
-					select.name = select.id;
-					
-					option = document.createElement('option');
-					option.value = match_data.homeTeamId;
-					option.text = match_data.homeTeam.teamName1;
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = match_data.awayTeamId;
-					option.text = match_data.awayTeam.teamName1;
-					select.appendChild(option);
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					
-					select = document.createElement('select');
-					select.id = 'selectStatsType';
-					select.name = select.id;
-					
-					option = document.createElement('option');
-					option.value = 'single';
-					option.text = 'Single Substitution';
-					select.appendChild(option);
-					
-					/*option = document.createElement('option');
-					option.value = 'double';
-					option.text = 'Double Substitution';
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = 'triple';
-					option.text = 'Triple Substitution';
-					select.appendChild(option);*/
-					
-				    select.setAttribute('onchange',"processUserSelection(this)");
-					row.insertCell(cellCount).appendChild(select);
-					
-					cellCount = cellCount + 1;
-					
-					option = document.createElement('input');
-		    		option.type = 'button';
-		    		
-		    		option.name = 'populate_subchange_on_btn';
-		    		option.value = 'ChangeOn';
-		    		
-		    		option.id = option.name;
-				    option.setAttribute('onclick',"processUserSelection(this)");
-				    
-				    div = document.createElement('div');
-					div.append(option);
-						    
-				    row.insertCell(cellCount).appendChild(div);
-					cellCount = cellCount + 1;
-					
-					
-					option = document.createElement('input');
-		    		option.type = 'button';
-		    		
-		    		option.name = 'populate_substitution_btn';
-		    		option.value = 'Populate Substitution';
-		    		
-		    		option.id = option.name;
-				    option.setAttribute('onclick',"processUserSelection(this)");
-				    
-				    div = document.createElement('div');
-				    div.append(option);
-				    
-				    row.insertCell(cellCount).appendChild(div);
-				    cellCount = cellCount + 1;
-				    
-					option = document.createElement('input');
-					option.type = 'button';
-					option.name = 'cancel_graphics_btn';
-					option.id = option.name;
-					option.value = 'Cancel';
-					option.setAttribute('onclick','processUserSelection(this)');
-			
-				    div.append(option);
-				    
-				    row.insertCell(cellCount).appendChild(div);
-				    cellCount = cellCount + 1;
-				    
-					document.getElementById('select_graphic_options_div').style.display = '';
-					break;
-				case 'RESULT_PROMO-OPTIONS':
-					select = document.createElement('select');
-					select.id = 'selectMatchPromo';
-					select.name = select.id;
-					
-					dataToProcess.forEach(function(oop,index,arr1){	
-					option = document.createElement('option');
-                    option.value = oop.matchnumber;
-                    option.text = oop.matchnumber + ' - ' + oop.home_Team.teamName1 + ' Vs ' + oop.away_Team.teamName1 ;
-                    select.appendChild(option);
-							
-	                });
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					break;
-				case 'MATCH-PROMO-OPTIONS':
-					select = document.createElement('select');
-					select.id = 'selectMatchPromo';
-					select.name = select.id;
-					
-					dataToProcess.forEach(function(oop,index,arr1){	
-					option = document.createElement('option');
-                    option.value = oop.matchnumber;
-                    option.text = oop.matchnumber + ' - ' + oop.home_Team.teamName1 + ' Vs ' + oop.away_Team.teamName1 ;
-                    select.appendChild(option);
-							
-	                });
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					break;
-				case 'SCOREBUGPROMO-OPTIONS':
-					select = document.createElement('select');
-					select.id = 'selectMatchPromo';
-					select.name = select.id;
-					
-					dataToProcess.forEach(function(oop,index,arr1){	
-					option = document.createElement('option');
-                    option.value = oop.matchnumber;
-                    option.text = oop.matchnumber + ' - ' + oop.home_Team.teamName1 + ' Vs ' + oop.away_Team.teamName1 ;
-                    select.appendChild(option);
-							
-	                });
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					break;
-				case 'LT_MATCH-PROMO-OPTIONS':
-					select = document.createElement('select');
-					select.id = 'selectMatchPromo';
-					select.name = select.id;
-					
-					dataToProcess.forEach(function(oop,index,arr1){	
-					option = document.createElement('option');
-                    option.value = oop.matchnumber;
-                    option.text = oop.matchnumber + ' - ' + oop.home_Team.teamName1 + ' Vs ' + oop.away_Team.teamName1 ;
-                    select.appendChild(option);
-							
-	                });
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					break;	
-				case'PLAYINGXI-OPTIONS':
-					select = document.createElement('select');
-					select.id = 'selectPlayingXI';
-					select.name = select.id;
-					
-					option = document.createElement('option');
-					option.value = match_data.homeTeamId;
-					option.text = match_data.homeTeam.teamName1;
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = match_data.awayTeamId;
-					option.text = match_data.awayTeam.teamName1;
-					select.appendChild(option);
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					
-					switch ($('#selectedBroadcaster').val().toUpperCase()) {
-						case 'I_LEAGUE': case 'SANTOSH_TROPHY': case 'VIZ_SANTOSH_TROPHY': case 'VIZ_TRI_NATION': case 'SUPER_CUP': 
-						case 'CONTINENTAL':
-						select = document.createElement('select');
-						select.id = 'selectPlayingXIType';
-						select.name = select.id;
-						
-						option = document.createElement('option');
-						option.value = 'without_image';
-						option.text = 'WITHOUT IMAGE';
-						select.appendChild(option);
-						
-						option = document.createElement('option');
-						option.value = 'with_image';
-						option.text = 'WITH IMAGE';
-						select.appendChild(option);
-						
-						row.insertCell(cellCount).appendChild(select);
-						cellCount = cellCount + 1;
-						
-						option = document.createElement('input');
-			    		option.type = 'button';
-			    		
-			    		option.name = 'populate_homesub_btn';
-			    		option.value = 'ChangeOn 1';
-			    		
-			    		option.id = option.name;
-					    option.setAttribute('onclick',"processUserSelection(this)");
-					    
-					    div = document.createElement('div');
-						div.append(option);
-							    
-					    row.insertCell(cellCount).appendChild(div);
-						cellCount = cellCount + 1;
-						
-						option = document.createElement('input');
-			    		option.type = 'button';
-			    		
-			    		option.name = 'populate_Away_btn';
-			    		option.value = 'ChangeOn 2';
-			    		
-			    		option.id = option.name;
-					    option.setAttribute('onclick',"processUserSelection(this)");
-					    
-					    div = document.createElement('div');
-						div.append(option);
-						
-					    row.insertCell(cellCount).appendChild(div);
-						cellCount = cellCount + 1;
-						
-						option = document.createElement('input');
-			    		option.type = 'button';
-			    		
-			    		option.name = 'populate_awaysub_btn';
-			    		option.value = 'ChangeOn 3';
-			    		
-			    		option.id = option.name;
-					    option.setAttribute('onclick',"processUserSelection(this)");
-					    
-					    div = document.createElement('div');
-						div.append(option);
-						
-					    row.insertCell(cellCount).appendChild(div);
-						cellCount = cellCount + 1;
-						
-						break;
-					}
-					
-				    switch(whatToProcess){
-						case'PLAYINGXI-OPTIONS':
-							option = document.createElement('input');
-				    		option.type = 'button';
-				    		
-				    		option.name = 'populate_playingxi_btn';
-				    		option.value = 'Populate Teams LineUp';
-				    		
-				    		option.id = option.name;
-						    option.setAttribute('onclick',"processUserSelection(this)");
-						    
-						    div = document.createElement('div');
-						    div.append(option);
-						    
-						    row.insertCell(cellCount).appendChild(div);
-						    cellCount = cellCount + 1;
-							break;
-					}
-				    
-					option = document.createElement('input');
-					option.type = 'button';
-					option.name = 'cancel_graphics_btn';
-					option.id = option.name;
-					option.value = 'Cancel';
-					option.setAttribute('onclick','processUserSelection(this)');
-			
-				    div.append(option);
-				    
-				    row.insertCell(cellCount).appendChild(div);
-				    cellCount = cellCount + 1;
-				    
-					document.getElementById('select_graphic_options_div').style.display = '';
-					break;
-				case'NAMESUPER-OPTIONS':
-					select = document.createElement('select');
-					select.style = 'width:130px';
-					select.id = 'selectNameSuper';
-					select.name = select.id;
-					
-					dataToProcess.forEach(function(ns,index,arr1){
-						option = document.createElement('option');
-						option.value = ns.namesuperId;
-						option.text = ns.subHeader ;
-						select.appendChild(option);
-					});
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					
-					break;
-			case 'STAFF-OPTIONS':
-				select = document.createElement('select');
-				select.style = 'width:130px';
-				select.id = 'selectStaff';
-				select.name = select.id;
-				
-				dataToProcess.forEach(function(st,index,arr1){
-					if(st.clubId == home_team){
-						option = document.createElement('option');
-						option.value = st.staffId;
-						option.text = st.name + " - " + home_team_name ;
-						select.appendChild(option);
-					}else if(st.clubId == away_team){
-						option = document.createElement('option');
-						option.value = st.staffId;
-						option.text = st.name + " - " + away_team_name ;
-						select.appendChild(option);
-					}
-				});
-				
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-				
-				break;
-			case 'AD-OPTIONS':
-				select = document.createElement('select');
-				select.style = 'width:100px';
-				select.id = 'selectSponsor';
-				select.name = select.id;
-				
-				option = document.createElement('option');
-				option.value = 'xpulse';
-				option.text = 'Xpulse 200';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'passion';
-				option.text = 'Passion';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'Glamour';
-				option.text = 'Glamour';
-				select.appendChild(option);
-
-				option = document.createElement('option');
-				option.value = 'Splendor';
-				option.text = 'Splendor';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'Destini';
-				option.text = 'HeroDestini';
-				select.appendChild(option);
-				
-				//select.setAttribute('onchange',"processUserSelection(this)");
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-				break;
-						
-			case 'API-OPTIONS':
-				select = document.createElement('select');
-				select.id = 'selectTeam';
-				select.name = select.id;
-				
-				option = document.createElement('option');
-				option.value = match_data.homeTeamId;
-				option.text = match_data.homeTeam.teamName1;
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = match_data.awayTeamId;
-				option.text = match_data.awayTeam.teamName1;
-				select.appendChild(option);
-			
-				//select.setAttribute('onchange',"processUserSelection(this)");
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-
-				select = document.createElement('select');
-				select.style = 'width:100px';
-				select.id = 'selectStats';
-				select.name = select.id;
-				
-				option = document.createElement('option');
-				option.value = 'ball_possession';
-				option.text = 'BALL POSSESSION';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'shots';
-				option.text = 'SHOTS';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'shot_on_target';
-				option.text = 'SHOTS ON TARGET';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'yellow_card';
-				option.text = 'YELLOW CARD';
-				select.appendChild(option);
-				
-				//select.setAttribute('onchange',"processUserSelection(this)");
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-				break;
-			case 'TOP_STATS-OPTIONS':
-				
-				select = document.createElement('select');
-				select.style = 'width:100px';
-				select.id = 'selectTopStats';
-				select.name = select.id;
-				
-				option = document.createElement('option');
-				option.value = 'Best Runner';
-				option.text = 'Best Runner';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'Best Sprinter';
-				option.text = 'Best Sprinter';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'Highest Distance';
-				option.text = 'Highest Distance';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'Team Top Speed';
-				option.text = 'Team Top Speed';
-				select.appendChild(option);
-				
-				select.setAttribute('onchange',"processUserSelection(this)");
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-				
-				break;
-			case 'HEATMAP_PEAKDISTACE-OPTION':
-				select = document.createElement('select');
-				select.id = 'selectTeam';
-				select.name = select.id;
-				
-				option = document.createElement('option');
-				option.value = match_data.homeTeamId;
-				option.text = match_data.homeTeam.teamName1;
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = match_data.awayTeamId;
-				option.text = match_data.awayTeam.teamName1;
-				select.appendChild(option);
-			
-				select.setAttribute('onchange',"processUserSelection(this)");
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-
-				select = document.createElement('select');
-				select.style = 'width:100px';
-				select.id = 'selectHeatmappeakdistance';
-				select.name = select.id;
-				
-				option = document.createElement('option');
-				option.value = 'heatmap';
-				option.text = 'Heat Map';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'peakdistance';
-				option.text = 'Peak Distance';
-				select.appendChild(option);
-				
-				select.setAttribute('onchange',"processUserSelection(this)");
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-				
-				select = document.createElement('select');
-				select.style = 'width:100px';
-				select.id = 'selectPlayer';
-				select.name = select.id;
-				
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-				break;
-				
-			case 'SCOREBUG-CARD-OPTIONS':
-				select = document.createElement('select');
-				select.id = 'selectTeam';
-				select.name = select.id;
-				
-				option = document.createElement('option');
-				option.value = match_data.homeTeamId;
-				option.text = match_data.homeTeam.teamName1;
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = match_data.awayTeamId;
-				option.text = match_data.awayTeam.teamName1;
-				select.appendChild(option);
-			
-				select.setAttribute('onchange',"processUserSelection(this)");
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-
-				select = document.createElement('select');
-				select.style = 'width:100px';
-				select.id = 'selectCaptainWicketKeeper';
-				select.name = select.id;
-				
-				option = document.createElement('option');
-				option.value = 'player';
-				option.text = 'Player';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'yellow_card';
-				option.text = 'YELLOW CARD';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'red_card';
-				option.text = 'RED CARD';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'yellow_red';
-				option.text = '2YELLOW';
-				select.appendChild(option);
-				
-				select.setAttribute('onchange',"processUserSelection(this)");
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-				
-				select = document.createElement('select');
-				select.style = 'width:100px';
-				select.id = 'selectPlayer';
-				select.name = select.id;
-				
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-				break;	
-			case 'NAMESUPER-CARD-OPTIONS':
-				select = document.createElement('select');
-				select.id = 'selectTeam';
-				select.name = select.id;
-				
-				option = document.createElement('option');
-				option.value = match_data.homeTeamId;
-				option.text = match_data.homeTeam.teamName1;
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = match_data.awayTeamId;
-				option.text = match_data.awayTeam.teamName1;
-				select.appendChild(option);
-			
-				select.setAttribute('onchange',"processUserSelection(this)");
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-
-				select = document.createElement('select');
-				select.style = 'width:100px';
-				select.id = 'selectCaptainWicketKeeper';
-				select.name = select.id;
-				
-				option = document.createElement('option');
-				option.value = 'yellow';
-				option.text = 'YELLOW CARD';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'red';
-				option.text = 'RED CARD';
-				select.appendChild(option);
-				
-				option = document.createElement('option');
-				option.value = 'yellow_red';
-				option.text = '2YELLOW/RED';
-				select.appendChild(option);
-				
-				select.setAttribute('onchange',"processUserSelection(this)");
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-				
-				select = document.createElement('select');
-				select.style = 'width:100px';
-				select.id = 'selectPlayer';
-				select.name = select.id;
-				
-				row.insertCell(cellCount).appendChild(select);
-				cellCount = cellCount + 1;
-				break;
-				
-			case 'NAMESUPER_PLAYER-OPTIONS':
-					select = document.createElement('select');
-					select.id = 'selectTeam';
-					select.name = select.id;
-					
-					option = document.createElement('option');
-					option.value = match_data.homeTeamId;
-					option.text = match_data.homeTeam.teamName1;
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = match_data.awayTeamId;
-					option.text = match_data.awayTeam.teamName1;
-					select.appendChild(option);
-				
-					select.setAttribute('onchange',"processUserSelection(this)");
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-	
-					select = document.createElement('select');
-					select.style = 'width:100px';
-					select.id = 'selectCaptainWicketKeeper';
-					select.name = select.id;
-					
-					option = document.createElement('option');
-					option.value = 'Player';
-					option.text = 'Player';
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = 'Player_Today_Goal';
-					option.text = 'Player Goals Today';
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = 'Player_Role';
-					option.text = 'Player Role';
-					select.appendChild(option);
-	
-					option = document.createElement('option');
-					option.value = 'Player Of The Match';
-					option.text = 'Hero Of The Match';
-					select.appendChild(option);
-					
-					/*option = document.createElement('option');
-					option.value = 'Goal_Scorer';
-					option.text = 'Goal Scorer';
-					select.appendChild(option);*/
-					
-					option = document.createElement('option');
-					option.value = 'Captain';
-					option.text = 'Captain';
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = 'Captain-GoalKeeper';
-					option.text = 'Captain-GoalKeeper';
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = 'Goal_Keeper';
-					option.text = 'GoalKeeper';
-					select.appendChild(option);
-					
-					select.setAttribute('onchange',"processUserSelection(this)");
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					
-					select = document.createElement('select');
-					select.style = 'width:100px';
-					select.id = 'selectPlayer';
-					select.name = select.id;
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-				break;
-				
+			switch(whatToProcess){	
 			case 'BUG_DB-OPTIONS':
 				select = document.createElement('select');
 				select.style = 'width:130px';
@@ -2749,328 +807,10 @@ function addItemsToList(whatToProcess, dataToProcess)
 				
 				row.insertCell(cellCount).appendChild(select);
 				cellCount = cellCount + 1;
-				switch(whatToProcess){
-					case 'BUG_DB-OPTIONS':
-						select = document.createElement('input');
-						select.type = "text";
-						select.id = 'bugdbScene';
-						select.name = select.id;
-						//select.value = 'D:/DOAD_In_House_Everest/Everest_Cricket/EVEREST_GPCL2022/Scenes/Bug_SingleLine.sum';
-						
-						row.insertCell(cellCount).appendChild(select);
-						cellCount = cellCount + 1;
-						break;
-					}
 				break;
 			}
 			
 			switch (whatToProcess) {
-			case 'AD-OPTIONS':
-				option = document.createElement('input');
-		   	 	option.type = 'button';
-				option.name = 'populate_sponsor_btn';
-				option.value = 'Populate Sponsor';
-			    option.id = option.name;
-			    
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
-				
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;
-			case 'RESULT_PROMO-OPTIONS':
-				option = document.createElement('input');
-		   	 	option.type = 'button';
-				option.name = 'populate_result_promo_btn';
-				option.value = 'Populate Result';
-			    option.id = option.name;
-			    
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
-				
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;
-			case 'MATCH-PROMO-OPTIONS':
-				option = document.createElement('input');
-		   	 	option.type = 'button';
-				option.name = 'populate_match_promo_btn';
-				option.value = 'Populate Match Promo';
-			    option.id = option.name;
-			    
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
-				
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;
-			case 'SCOREBUGPROMO-OPTIONS':
-				option = document.createElement('input');
-		   	 	option.type = 'button';
-				option.name = 'populate_scorebug_match_promo_btn';
-				option.value = 'Populate Match Promo';
-			    option.id = option.name;
-			    
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
-				
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;
-			case 'LT_MATCH-PROMO-OPTIONS':
-				option = document.createElement('input');
-		   	 	option.type = 'button';
-				option.name = 'populate_ltmatch_promo_btn';
-				option.value = 'Populate Match Promo';
-			    option.id = option.name;
-			    
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
-				
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;	
-			case 'NAMESUPER-CARD-OPTIONS':
-				option = document.createElement('input');
-		   	 	option.type = 'button';
-			    option.name = 'populate_namesuper_card_btn';
-			    option.value = 'Populate Namesuper Card';
-			    option.id = option.name;
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
-	
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;
-			case 'TOP_STATS-OPTIONS':
-				option = document.createElement('input');
-		   	 	option.type = 'button';
-			    option.name = 'populate_Top_Stats_btn';
-			    option.value = 'Populate Top Stats';
-			    option.id = option.name;
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
-	
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;
-			case 'HEATMAP_PEAKDISTACE-OPTION':
-				option = document.createElement('input');
-		   	 	option.type = 'button';
-			    option.name = 'populate_heatmap_btn';
-			    option.value = 'Populate Image';
-			    option.id = option.name;
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
-	
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;
-			case 'SCOREBUG-CARD-OPTIONS':
-				option = document.createElement('input');
-		   	 	option.type = 'button';
-			    option.name = 'populate_scorebug_card_btn';
-			    option.value = 'Populate ScoreBug Card';
-			    option.id = option.name;
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
-	
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;	
-			case 'STAFF-OPTIONS':
-				option = document.createElement('input');
-		   	 	option.type = 'button';
-			    option.name = 'populate_staff_btn';
-			    option.value = 'Populate Staff';
-			    option.id = option.name;
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
-	
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;
-				
-			case'NAMESUPER-OPTIONS':
-				option = document.createElement('input');
-		   	 	option.type = 'button';
-			    option.name = 'populate_namesuper_btn';
-			    option.value = 'Populate Namesuper';
-			    option.id = option.name;
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
-	
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;
-			case 'NAMESUPER_PLAYER-OPTIONS':
-				option = document.createElement('input');
-		   	 	option.type = 'button';	
-				option.name = 'populate_namesuper_player_btn';
-			    option.value = 'Populate Namesuper-Player';
-			    option.id = option.name;
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
-	
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;
 			case 'BUG_DB-OPTIONS':
 				option = document.createElement('input');
 		    	option.type = 'button';
@@ -3081,364 +821,9 @@ function addItemsToList(whatToProcess, dataToProcess)
 			    
 			    div = document.createElement('div');
 			    div.append(option);
-	
-				option = document.createElement('input');
-				option.type = 'button';
-				option.name = 'cancel_graphics_btn';
-				option.id = option.name;
-				option.value = 'Cancel';
-				option.setAttribute('onclick','processUserSelection(this)');
-		
-			    div.append(option);
-			    
-			    row.insertCell(cellCount).appendChild(div);
-			    cellCount = cellCount + 1;
-			    
-				document.getElementById('select_graphic_options_div').style.display = '';
-				break;
-			/*case'PLAYINGXI-OPTIONS':
-				option.name = 'populate_playingxi_btn';
-		    	option.value = 'Populate Teams LineUp';
-				break;*/	
-			
-		    
-		}
-			break;
-		}
-		break;
-	/*case 'APIDATA-OPTIONS':
-		var home_name,away_name;
-		api_value_home = '';
-		api_value_away = '';
-		header_text = document.createElement('h6');
-		header_text.innerHTML = 'DOAD API DATA';
-		document.getElementById('select_graphic_options_div').appendChild(header_text);
-		
-		table = document.createElement('table');
-		table.setAttribute('class', 'table table-bordered');
-				
-		tbody = document.createElement('tbody');
-
-		table.appendChild(tbody);
-		document.getElementById('select_graphic_options_div').appendChild(table);
-
-		row = tbody.insertRow(tbody.rows.length);
-		
-		header_text = document.createElement('h6');
-		if(dataToProcess.apiData.length > 0) {
-			for(var i = 0; i <= dataToProcess.apiData.length -1; i++ ) {
-				if(dataToProcess.apiData[i].team_id ==  dataToProcess.homeTeam.teamApiId) {
-					home_name = dataToProcess.apiData[i].team_name;
-					
-					if(dataToProcess.apiData[i].param_name == 'Yellow card') {
-						api_value_home =  'YELLOW: ' + dataToProcess.apiData[i].value + ', ';
-					}
-					if(dataToProcess.apiData[i].param_name == 'Red card') {
-						api_value_home = api_value_home + ' RED: ' + dataToProcess.apiData[i].value + ', ';
-					}
-					if(dataToProcess.apiData[i].param_name == 'Offsides') {
-						api_value_home = api_value_home + ' OFFSIDES: ' + dataToProcess.apiData[i].value + ', ';
-					}
-					if(dataToProcess.apiData[i].param_name == 'Shots') {
-						api_value_home = api_value_home + ' SHOTS: ' + dataToProcess.apiData[i].value + ', ';
-					}
-					if(dataToProcess.apiData[i].param_name == 'Shots on target') {
-						api_value_home = api_value_home + ' SHOTS ON TARGET: ' + dataToProcess.apiData[i].value + ', ';
-					}
-					if(dataToProcess.apiData[i].param_name == 'Corner') {
-						api_value_home =  api_value_home + ' CORNERS: ' + dataToProcess.apiData[i].value + ', ';
-					}
-					if(dataToProcess.apiData[i].param_name == 'Tackles') {
-						api_value_home =  api_value_home + ' TACKLES: ' + dataToProcess.apiData[i].value + ', ';
-					}
-				}
-				
-				
-				if(dataToProcess.apiData[i].team_id == dataToProcess.awayTeam.teamApiId) {
-					away_name = dataToProcess.apiData[i].team_name;
-					
-					if(dataToProcess.apiData[i].param_name == 'Yellow card') {
-						api_value_away = ' YELLOW: ' + dataToProcess.apiData[i].value + ', ';
-					}
-					if(dataToProcess.apiData[i].param_name == 'Red card') {
-						api_value_away = api_value_away + ' RED: ' + dataToProcess.apiData[i].value + ', ';
-					}
-					if(dataToProcess.apiData[i].param_name == 'Offsides') {
-						api_value_away = api_value_away + ' OFFSIDES: ' + dataToProcess.apiData[i].value + ', ';
-					}
-					if(dataToProcess.apiData[i].param_name == 'Shots') {
-						api_value_away = api_value_away + ' SHOTS: ' + dataToProcess.apiData[i].value + ', ';
-					}
-					if(dataToProcess.apiData[i].param_name == 'Shots on target') {
-						api_value_away = api_value_away + ' SHOTS ON TARGET: ' + dataToProcess.apiData[i].value + ', ';
-					}
-					if(dataToProcess.apiData[i].param_name == 'Corner') {
-						api_value_away = api_value_away + ' CORNERS: ' + dataToProcess.apiData[i].value + ', ';
-					}
-					if(dataToProcess.apiData[i].param_name == 'Tackles') {
-						api_value_away = api_value_away + ' TACKLES: ' + dataToProcess.apiData[i].value + ', ';
-					}
-				}
-			}
-			header_text.innerHTML = header_text.innerHTML  + home_name + ' : ' + '[ ' + api_value_home + ' ]' + "<br>" + "<br>" 
-									+ away_name  + ' : ' + '[ ' + api_value_away + ' ]';
-			row.insertCell(0).appendChild(header_text);
-			
-		}
-		break;*/	
-	case 'SCOREBUG_OPTION': case 'EXTRA-TIME_OPTION': case 'SCOREBUG_OPTION_2': case 'EXTRA-TIME-BOTH_OPTION': case 'RED_CARD_OPTION':
-		switch ($('#selectedBroadcaster').val()) {
-		case 'I_LEAGUE': case 'SANTOSH_TROPHY': case 'VIZ_SANTOSH_TROPHY': case 'VIZ_TRI_NATION': case 'SUPER_CUP': case 'CONTINENTAL':
-
-			$('#select_graphic_options_div').empty();
-	
-			header_text = document.createElement('h6');
-			header_text.innerHTML = 'Select Graphic Options';
-			document.getElementById('select_graphic_options_div').appendChild(header_text);
-			
-			table = document.createElement('table');
-			table.setAttribute('class', 'table table-bordered');
-					
-			tbody = document.createElement('tbody');
-	
-			table.appendChild(tbody);
-			document.getElementById('select_graphic_options_div').appendChild(table);
-			
-			row = tbody.insertRow(tbody.rows.length);
-			
-			switch(whatToProcess){
-				case 'RED_CARD_OPTION':
-					select = document.createElement('input');
-					select.type = "text";
-					select.id = 'selecthometeamredcard';
-					select.value = '';
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					
-					select = document.createElement('input');
-					select.type = "text";
-					select.id = 'selectawayteamredcard';
-					select.value = '';
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					break;
-				case 'EXTRA-TIME_OPTION':
-					select = document.createElement('input');
-					select.type = "text";
-					select.id = 'selectExtratime';
-					select.value = '';
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					
-					break;
-				case 'EXTRA-TIME-BOTH_OPTION':
-					select = document.createElement('input');
-					select.type = "text";
-					select.id = 'selectExtratimeBoth';
-					select.value = '';
-					
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					
-					break;
-				case 'SCOREBUG_OPTION_2':
-					select = document.createElement('select');
-					select.style = 'width:130px';
-					select.id = 'selectScorebugstatstwo';
-					select.name = select.id;
-					
-					option = document.createElement('option');
-					option.value = 'yellow_home';
-					option.text = 'Yellow Home +1';
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = 'yellow_away';
-					option.text = 'yellow Away +1';
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = 'red_home';
-					option.text = 'Red Home +1';
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = 'red_away';
-					option.text = 'Red Away +1';
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = 'corners_home';
-					option.text = 'Corners Home +1';
-					select.appendChild(option);
-					
-					option = document.createElement('option');
-					option.value = 'corners_away';
-					option.text = 'Corners Away +1';
-					select.appendChild(option);
-					
-					select.setAttribute('onchange',"processUserSelection(this)");
-					row.insertCell(cellCount).appendChild(select);
-					cellCount = cellCount + 1;
-					
-					break;
-				
-				case 'SCOREBUG_OPTION':
-					switch ($('#selectedBroadcaster').val()){
-						case 'VIZ_TRI_NATION': case 'SUPER_CUP': case 'CONTINENTAL':
-							select = document.createElement('select');
-							select.style = 'width:130px';
-							select.id = 'selectScorebugstats';
-							select.name = select.id;
-							
-							option = document.createElement('option');
-							option.value = 'yellow';
-							option.text = 'Yellow Card';
-							select.appendChild(option);
-		
-							option = document.createElement('option');
-							option.value = 'red';
-							option.text = 'Red Card';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'off_side';
-							option.text = 'Offside';
-							select.appendChild(option);
-			
-							option = document.createElement('option');
-							option.value = 'shots';
-							option.text = 'Shots';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'shots_on_target';
-							option.text = 'Shots on Target';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'possession';
-							option.text = 'Possession';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'corners';
-							option.text = 'Corners';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'tackles';
-							option.text = 'Tackles';
-							select.appendChild(option);
-							
-							select.setAttribute('onchange',"processUserSelection(this)");
-							row.insertCell(cellCount).appendChild(select);
-							cellCount = cellCount + 1;
-							
-							select = document.createElement('input');
-							select.type = "text";
-							select.id = 'selecthomedata';
-							select.value = '';
-							
-							row.insertCell(cellCount).appendChild(select);
-							cellCount = cellCount + 1;
-							
-							select = document.createElement('input');
-							select.type = "text";
-							select.id = 'selectawaydata';
-							select.value = '';
-							
-							row.insertCell(cellCount).appendChild(select);
-							cellCount = cellCount + 1;
-							break;
-						case 'I_LEAGUE': case 'SANTOSH_TROPHY': case 'VIZ_SANTOSH_TROPHY': 
-							select = document.createElement('select');
-							select.style = 'width:130px';
-							select.id = 'selectScorebugstats';
-							select.name = select.id;
-							
-							option = document.createElement('option');
-							option.value = 'yellow';
-							option.text = 'Yellow Card';
-							select.appendChild(option);
-		
-							option = document.createElement('option');
-							option.value = 'red';
-							option.text = 'Red Card';
-							select.appendChild(option);
-							
-							/*option = document.createElement('option');
-							option.value = 'off_side';
-							option.text = 'Offside';
-							select.appendChild(option);
-			
-							option = document.createElement('option');
-							option.value = 'shots';
-							option.text = 'Shots';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'shots_on_target';
-							option.text = 'Shots on Target';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'possession';
-							option.text = 'Possession';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'corners';
-							option.text = 'Corners';
-							select.appendChild(option);
-							
-							option = document.createElement('option');
-							option.value = 'tackles';
-							option.text = 'Tackles';
-							select.appendChild(option);*/
-							
-							select.setAttribute('onchange',"processUserSelection(this)");
-							row.insertCell(cellCount).appendChild(select);
-							cellCount = cellCount + 1;
-							break;
-					}
-					
-					break;
-				}
-			
-			option = document.createElement('input');
-		    option.type = 'button';
-			switch (whatToProcess) {
-			case 'RED_CARD_OPTION':
-				option.name = 'populate_red_card_btn';
-		    	option.value = 'Populate Red Card';
-		    	break;
-			case 'EXTRA-TIME_OPTION':
-				option.name = 'populate_extra_time_btn';
-		    	option.value = 'Populate Extra Time';
-				break;
-			case 'EXTRA-TIME-BOTH_OPTION':
-				option.name = 'populate_extra_time_both_btn';
-		    	option.value = 'Populate Extra Time Both';
-				break;
-			case 'SCOREBUG_OPTION_2':
-				option.name = 'populate_stats_two_btn';
-			    option.value = 'Populate Stats';
-				break;
-			case 'SCOREBUG_OPTION':
-			    option.name = 'populate_stats_btn';
-			    option.value = 'Populate Stats';
 				break;
 			}
-		    option.id = option.name;
-		    option.setAttribute('onclick',"processUserSelection(this)");
-		    
-		    div = document.createElement('div');
-		    div.append(option);
-
+			
 			option = document.createElement('input');
 			option.type = 'button';
 			option.name = 'cancel_graphics_btn';
@@ -3447,16 +832,13 @@ function addItemsToList(whatToProcess, dataToProcess)
 			option.setAttribute('onclick','processUserSelection(this)');
 	
 		    div.append(option);
-		    
 		    row.insertCell(cellCount).appendChild(div);
 		    cellCount = cellCount + 1;
 		    
 			document.getElementById('select_graphic_options_div').style.display = '';
-
 			break;
 		}
-		break;
-	
+		break;	
 	case 'LOAD_OVERWRITE_MATCH_SUB':
 		$('#select_event_div').empty();
 
@@ -4272,7 +1654,98 @@ function addItemsToList(whatToProcess, dataToProcess)
 		document.getElementById('select_event_div').appendChild(table);
 
 		break;
-				
+		
+	case 'LOAD_SET':
+	    $('#select_set_div').empty();
+	
+	    table = document.createElement('table');
+	    table.setAttribute('class', 'table table-bordered');
+	    table.style.backgroundColor = '#f4f0ff';
+	    table.style.borderCollapse = 'separate';
+	    table.style.borderSpacing = '0 6px'; // smaller spacing
+	    tbody = document.createElement('tbody');
+	
+	    table.appendChild(tbody);
+	    document.getElementById('select_set_div').appendChild(table);
+	
+	    // ---------------- ROW 1: COMPACT BUTTONS ----------------
+	    row = tbody.insertRow(tbody.rows.length);
+	
+	    const buttons = [
+	        { name: 'start_set_btn', value: 'Start Set', color: 'green' },
+	        { name: 'end_set_btn', value: 'End Set', color: 'red' },
+	        //{ name: 'undo_set', value: 'Undo Set', color: 'blue' },
+	        //{ name: 'Overwrite_set', value: 'Overwrite Set', color: 'blue' },
+	        { name: 'reset_set_btn', value: 'Reset Set', color: 'black' }
+	    ];
+	
+	    buttons.forEach((btn, i) => {
+	        const cell = row.insertCell(i);
+	        option = document.createElement('input');
+	        option.type = 'button';
+	        option.name = btn.name;
+	        option.value = btn.value;
+	        option.style.width = 'auto';
+	        option.style.whiteSpace = 'nowrap';
+	        option.style.color = btn.color;
+	        option.style.border = btn.color === 'blue' ? '1.5px solid gray' : '1.5px solid #d4af37';
+	        option.style.padding = '6px 12px';
+	        option.style.borderRadius = '6px';
+	        option.style.boxShadow = '1px 2px 3px rgba(0, 0, 0, 0.2)';
+	        option.style.fontWeight = '500';
+	        option.style.fontSize = '13px';
+	        option.style.backgroundColor = 'white';
+	        option.setAttribute('onclick', 'processUserSelection(this);');
+	        cell.appendChild(option);
+	        cell.style.padding = '2px 6px';
+	    });
+	
+	    // ---------------- ROW 2: SET NUMBER HEADER ----------------
+	    row = tbody.insertRow(tbody.rows.length);
+	    cell = row.insertCell(row.cells.length);
+	    cell.innerHTML = '<b style="font-size: 15px; color:#2a0077;">Team</b>';
+	    cell.style.textAlign = 'center';
+	    cell.style.padding = '6px 10px';
+	    cell.style.backgroundColor = '#e4dbff';
+	    cell.style.border = '1px solid #c7b6e2';
+	
+	    for (var s = 1; s <= match_data.sets.length; s++) {
+	        cell = row.insertCell(row.cells.length);
+	        cell.innerHTML = `<b style="font-size: 14px; color:#2a0077;">Set ${s}</b>`;
+	        cell.style.textAlign = 'center';
+	        cell.style.padding = '6px 10px';
+	        cell.style.backgroundColor = '#e4dbff';
+	        cell.style.border = '1px solid #c7b6e2';
+	        cell.style.borderRadius = '4px';
+	    }
+	
+	    // ---------------- ROW 3 & 4: TEAM SCORES ----------------
+	    for (var j = 0; j <= 1; j++) {
+	        row = tbody.insertRow(tbody.rows.length);
+	        cell = row.insertCell(row.cells.length);
+	
+	        const teamName = j === 0 ? dataToProcess.homeTeam.teamName1 : dataToProcess.awayTeam.teamName1;
+	        cell.innerHTML = `<b style="font-size: 15px; color:#2a0077; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);">${teamName}</b>`;
+	        cell.style.padding = '6px 10px';
+	        cell.style.backgroundColor = '#f4f0ff';
+	        cell.style.border = '1px solid #c7b6e2';
+	
+	        const teamSets = j === 0 ? match_data.sets.map(s => s.homeScore) : match_data.sets.map(s => s.awayScore);
+	
+	        teamSets.forEach(score => {
+	            cell = row.insertCell(row.cells.length);
+	            cell.innerHTML = `<span style="font-size:14px; color:#2a0077; font-weight:600;">${score}</span>`;
+	            cell.style.textAlign = 'center';
+	            cell.style.border = '1px solid #c7b6e2';
+	            cell.style.borderRadius = '4px';
+	            cell.style.padding = '6px 10px';
+	            cell.style.backgroundColor = '#ebe3ff';
+	            cell.style.boxShadow = '1px 1px 2px rgba(0,0,0,0.1)';
+	        });
+	    }
+	    break;
+
+	
 	case 'LOAD_MATCH':
 		
 		$('#polo_div').empty();
@@ -4346,7 +1819,7 @@ function addItemsToList(whatToProcess, dataToProcess)
 				th.scope = 'col';
 			    switch (j) {
 				case 0:
-				    th.innerHTML = dataToProcess.homeTeam.teamName1;
+				    th.innerHTML = dataToProcess.homeTeam.teamName1 + ' - ' + dataToProcess.homeTeamScore;
 				    link_div = document.createElement('div');
 					for(var k=0; k<=2; k++) {
 						switch (k) {
@@ -4374,7 +1847,10 @@ function addItemsToList(whatToProcess, dataToProcess)
 		    				option.id = 'homeScore';
 		    				option.name = 'homeScore';
 							option.style = 'width:30%; height:35px; text-align:center; font-size:24px;'; // Increased size
-							option.value = dataToProcess.homeTeamScore;
+							option.value = '0';
+							match_data.sets.forEach(function(set){
+								option.value = set.homeScore;
+							});
 							option.onblur = function() { processUserSelection(this);};
 		    				break;
 						}
@@ -4383,7 +1859,7 @@ function addItemsToList(whatToProcess, dataToProcess)
 				    th.appendChild(link_div);
 					break;
 				case 1:
-					th.innerHTML = dataToProcess.awayTeam.teamName1;
+					th.innerHTML = dataToProcess.awayTeam.teamName1 + ' - ' + dataToProcess.awayTeamScore;
 					link_div = document.createElement('div');
 					for(var k=0; k<=2; k++) {
 						switch (k) {
@@ -4411,7 +1887,10 @@ function addItemsToList(whatToProcess, dataToProcess)
 		    				option.id = 'awayScore';
 		    				option.name = 'awayScore';
 							option.style = 'width:30%; height:35px; text-align:center; font-size:24px;'; // Increased size
-							option.value = dataToProcess.awayTeamScore;
+							option.value = '0';
+							match_data.sets.forEach(function(set){
+								option.value = set.awayScore;
+							});
 							option.onblur = function() { processUserSelection(this);};
 		    				break;
 						}

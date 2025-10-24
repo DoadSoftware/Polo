@@ -38,6 +38,7 @@ import com.polo.model.Event;
 import com.polo.model.EventFile;
 import com.polo.model.Match;
 import com.polo.model.Player;
+import com.polo.model.Set;
 import com.polo.service.PoloService;
 import com.polo.util.PoloFunctions;
 import com.polo.util.PoloUtil;
@@ -59,7 +60,7 @@ public class IndexController
 	public static EventFile session_event;
 	public static String session_selected_broadcaster;
 	public static Socket session_socket;
-	public static POLO session_khelo_india;
+	public static POLO session_polo;
 	public static List<Scene> session_selected_scenes;
 	
 	@RequestMapping(value = {"/","/initialise"}, method={RequestMethod.GET,RequestMethod.POST}) 
@@ -153,11 +154,12 @@ public class IndexController
 				session_socket = new Socket(vizIPAddresss, Integer.valueOf(vizPortNumber));
 				switch (session_selected_broadcaster.toUpperCase()) {
 				case PoloUtil.POLO:
-					session_selected_scenes.add(new Scene(PoloUtil.POLO_SCORE_BUG_SCENE_PATH,PoloUtil.ONE)); // Front layer
-					session_selected_scenes.add(new Scene("",PoloUtil.TWO));
+					session_selected_scenes.add(new Scene(PoloUtil.POLO_OVERLAYS,PoloUtil.FRONT_LAYER)); // Front layer
+					session_selected_scenes.add(new Scene("",PoloUtil.BACK_LAYER));
 					session_selected_scenes.get(0).scene_load(session_socket, session_selected_broadcaster);
-					session_khelo_india = new POLO();
-					session_khelo_india.scorebug = new ScoreBug();
+					session_selected_scenes.get(1).scene_load(session_socket, session_selected_broadcaster);
+					session_polo = new POLO();
+					session_polo.scorebug = new ScoreBug();
 					break;
 					
 				}
@@ -199,7 +201,7 @@ public class IndexController
 			model.addAttribute("session_event", session_event);
 			model.addAttribute("session_configurations", session_configurations);
 			model.addAttribute("session_socket", session_socket);
-			model.addAttribute("session_khelo_india", session_khelo_india);
+			model.addAttribute("session_polo", session_polo);
 			model.addAttribute("session_selected_scenes", session_selected_scenes);
 			
 			return "match";
@@ -430,7 +432,7 @@ public class IndexController
 			
 			switch (session_selected_broadcaster) {
 			case PoloUtil.POLO:
-				session_khelo_india.ProcessGraphicOption(whatToProcess,session_match, session_clock,poloService,session_socket, 
+				session_polo.ProcessGraphicOption(whatToProcess,session_match, session_clock,poloService,session_socket, 
 						session_selected_scenes, valueToProcess);
 				break;
 			}
@@ -453,8 +455,7 @@ public class IndexController
 		case "SCOREBUGPROMO_GRAPHICS-OPTIONS":	case "RESULT_PROMO_GRAPHICS-OPTIONS":
 			switch (session_selected_broadcaster) {
 			case PoloUtil.POLO:
-				return session_khelo_india.ProcessGraphicOption(whatToProcess,session_match,session_clock, 
-						poloService,session_socket, session_selected_scenes, valueToProcess).toString();
+				return session_polo.ProcessGraphicOption(whatToProcess,session_match,session_clock, poloService,session_socket, session_selected_scenes, valueToProcess).toString();
 			}
 			
 			return JSONObject.fromObject(session_match).toString();
@@ -503,11 +504,40 @@ public class IndexController
 			
 			return JSONObject.fromObject(session_match).toString();
 			
+		case "LOG_SET":
+			if(session_match.getSets() == null) {
+				session_match.setSets(new ArrayList<Set>());
+			}
+			if(valueToProcess.split(",")[1].toUpperCase().contains(PoloUtil.START)) {
+				session_match.getSets().add(new Set(session_match.getSets().size() + 1, PoloUtil.START));
+			} else if(valueToProcess.split(",")[1].toUpperCase().contains("RESET")) {
+				session_match.getSets().remove(session_match.getSets().size()-1);
+			} else if(valueToProcess.split(",")[1].toUpperCase().contains(PoloUtil.END)) {
+				session_match.getSets().get(session_match.getSets().size()-1).setSet_status(PoloUtil.END);
+				session_match.getSets().get(session_match.getSets().size()-1).setSet_winner(valueToProcess.split(",")[2]);
+			}
+			
+			new ObjectMapper().writeValue(new File(PoloUtil.SPORTS_DIRECTORY + PoloUtil.POLO_DIRECTORY + PoloUtil.MATCHES_DIRECTORY + 
+					session_match.getMatchFileName()), session_match);
+			return JSONObject.fromObject(session_match).toString();
+			
 		case "UPDATE_SCORE_USING_TXT":
 			String goal = valueToProcess.split(",")[1];
+			int HomeTotalScore = Integer.valueOf(goal.split("-")[0]);
+			int AwayTotalScore = Integer.valueOf(goal.split("-")[1]);
 			
-			session_match.setHomeTeamScore(Integer.valueOf(goal.split("-")[0]));
-			session_match.setAwayTeamScore(Integer.valueOf(goal.split("-")[1]));
+			session_match.getSets().get(session_match.getSets().size() - 1).setHomeScore(Integer.valueOf(goal.split("-")[0]));
+			session_match.getSets().get(session_match.getSets().size() - 1).setAwayScore(Integer.valueOf(goal.split("-")[1]));
+			
+			for(Set set : session_match.getSets()) {
+				if(set.getSet_status().equalsIgnoreCase(PoloUtil.END)) {
+					HomeTotalScore = HomeTotalScore + set.getHomeScore();
+					AwayTotalScore = AwayTotalScore + set.getAwayScore();
+				}
+			}
+			
+			session_match.setHomeTeamScore(HomeTotalScore);
+			session_match.setAwayTeamScore(AwayTotalScore);
 			
 			session_match = PoloFunctions.populateMatchVariables(poloService, session_match);
 			new ObjectMapper().writeValue(new File(PoloUtil.SPORTS_DIRECTORY + PoloUtil.POLO_DIRECTORY + PoloUtil.MATCHES_DIRECTORY + session_match.getMatchFileName()), 
@@ -521,14 +551,18 @@ public class IndexController
 			if (which_team_goal.split("_")[0].equalsIgnoreCase("home")) {
 			    if (which_team_goal.split("_")[1].equalsIgnoreCase("increment")) {
 			        session_match.setHomeTeamScore(session_match.getHomeTeamScore() + 1);
+			        session_match.getSets().get(session_match.getSets().size() - 1).setHomeScore(session_match.getSets().get(session_match.getSets().size() - 1).getHomeScore() + 1);  
 			    } else if (which_team_goal.split("_")[1].equalsIgnoreCase("decrement")) {
 			        session_match.setHomeTeamScore(session_match.getHomeTeamScore() - 1);
+			        session_match.getSets().get(session_match.getSets().size() - 1).setHomeScore(session_match.getSets().get(session_match.getSets().size() - 1).getHomeScore() - 1);
 			    }
 			} else if (which_team_goal.split("_")[0].equalsIgnoreCase("away")) {
 			    if (which_team_goal.split("_")[1].equalsIgnoreCase("increment")) {
 			        session_match.setAwayTeamScore(session_match.getAwayTeamScore() + 1);
+			        session_match.getSets().get(session_match.getSets().size() - 1).setAwayScore(session_match.getSets().get(session_match.getSets().size() - 1).getAwayScore() + 1);
 			    } else if (which_team_goal.split("_")[1].equalsIgnoreCase("decrement")) {
 			        session_match.setAwayTeamScore(session_match.getAwayTeamScore() - 1);
+			        session_match.getSets().get(session_match.getSets().size() - 1).setAwayScore(session_match.getSets().get(session_match.getSets().size() - 1).getAwayScore() - 1);
 			    }
 			}
 
@@ -726,7 +760,7 @@ public class IndexController
 				
 				switch (session_selected_broadcaster) {
 				case PoloUtil.POLO:
-					session_khelo_india.updateScoreBug(session_selected_scenes,session_match, session_socket);
+					session_polo.updateScoreBug(session_selected_scenes,session_match, session_socket);
 					break;
 				}
 			}
@@ -735,7 +769,7 @@ public class IndexController
 		default:
 			switch (session_selected_broadcaster) {
 			case PoloUtil.POLO:
-				session_khelo_india.ProcessGraphicOption(whatToProcess,session_match, session_clock,poloService,session_socket, 
+				session_polo.ProcessGraphicOption(whatToProcess,session_match, session_clock,poloService,session_socket, 
 						session_selected_scenes, valueToProcess);
 				break;	
 			}

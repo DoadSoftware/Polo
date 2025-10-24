@@ -52,20 +52,21 @@ public class Scene {
 		PrintWriter print_writer = new PrintWriter(socket.getOutputStream(), true);
 		switch (broadcaster.toUpperCase()) {
 		case PoloUtil.POLO:
-			switch(this.which_layer) {
-			case PoloUtil.ONE:
-				//System.out.println("Secne : " + this.scene_path);
-				print_writer.println("LAYER1*EVEREST*SINGLE_SCENE LOAD " + this.scene_path + ";");
-				
-				print_writer.println("LAYER1*EVEREST*STAGE*DIRECTOR*In STOP;");
-				print_writer.println("LAYER1*EVEREST*STAGE*DIRECTOR*In SHOW 0.0;");
+			switch(this.which_layer.toUpperCase()) {
+			case PoloUtil.FRONT_LAYER:
+				print_writer.println("-1 RENDERER*FRONT_LAYER SET_OBJECT SCENE*" + this.scene_path + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*SCENE_DATA INITIALIZE \0");
 				TimeUnit.MILLISECONDS.sleep(500);
 				break;
-			case PoloUtil.TWO:
-				print_writer.println("LAYER2*EVEREST*SINGLE_SCENE LOAD " + this.scene_path + ";");
-				
-				print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*In STOP;");
-				print_writer.println("LAYER2*EVEREST*STAGE*DIRECTOR*In SHOW 0.0;");
+			case PoloUtil.MIDDLE_LAYER:
+				print_writer.println("-1 RENDERER SET_OBJECT SCENE*" + this.scene_path + "\0");
+				print_writer.println("-1 RENDERER*STAGE SHOW 0.0\0");
+				print_writer.println("-1 RENDERER*SCENE_DATA INITIALIZE \0");
+				TimeUnit.MILLISECONDS.sleep(500);
+				break;
+			case PoloUtil.BACK_LAYER:
+				print_writer.println("-1 RENDERER*BACK_LAYER SET_OBJECT SCENE*" + this.scene_path + "\0");
+				print_writer.println("-1 RENDERER*BACK_LAYER*SCENE_DATA INITIALIZE \0");
 				TimeUnit.MILLISECONDS.sleep(500);
 				break;
 			}
