@@ -3,6 +3,7 @@ package com.polo.controller;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.text.ParseException;
@@ -160,6 +161,8 @@ public class IndexController
 					session_selected_scenes.get(1).scene_load(session_socket, session_selected_broadcaster);
 					session_polo = new POLO();
 					session_polo.scorebug = new ScoreBug();
+					
+					session_polo.AnimateLogo(session_socket);
 					break;
 					
 				}
@@ -502,6 +505,54 @@ public class IndexController
 			
 			session_match.setEvents(session_event.getEvents());
 			
+			return JSONObject.fromObject(session_match).toString();
+			
+		case "OVERWRITE_SET":
+			int HomeScore = 0, AwayScore = 0; 
+			
+			if (!session_match.getSets().isEmpty()) {
+				for(Set set : session_match.getSets()) {
+					if(set.getSet_number() == Integer.valueOf(valueToProcess.split(",")[1])) {
+						
+						if(Integer.valueOf(valueToProcess.split(",")[2]) == session_match.getHomeTeamId()) {
+							set.setSet_winner("home");
+						}else if(Integer.valueOf(valueToProcess.split(",")[2]) == session_match.getAwayTeamId()) {
+							set.setSet_winner("away");
+						}
+						
+						//SET SCORES
+						set.setHomeScore(Integer.valueOf(valueToProcess.split(",")[3]));
+						set.setAwayScore(Integer.valueOf(valueToProcess.split(",")[4]));
+						
+						//TOTAL SCORE COUNT
+						HomeScore = HomeScore + Integer.valueOf(valueToProcess.split(",")[3]);
+						AwayScore = AwayScore + Integer.valueOf(valueToProcess.split(",")[4]);
+					}else {
+						//TOTAL SCORE COUNT
+						HomeScore = HomeScore + set.getHomeScore();
+						AwayScore = AwayScore + set.getAwayScore();
+					}
+				}
+			}
+			
+			//TOTAL SCORE
+			session_match.setHomeTeamScore(HomeScore);
+			session_match.setAwayTeamScore(AwayScore);
+			
+			new ObjectMapper().writeValue(new File(PoloUtil.SPORTS_DIRECTORY + PoloUtil.POLO_DIRECTORY + PoloUtil.MATCHES_DIRECTORY + 
+					session_match.getMatchFileName()), session_match);
+			return JSONObject.fromObject(session_match).toString();
+			
+		case "UNDO_SET":
+			if (!session_match.getSets().isEmpty()) {
+				session_match.setHomeTeamScore(session_match.getHomeTeamScore() - session_match.getSets().get(session_match.getSets().size() - 1).getHomeScore());
+				session_match.setAwayTeamScore(session_match.getAwayTeamScore() - session_match.getSets().get(session_match.getSets().size() - 1).getAwayScore());
+				
+				session_match.getSets().remove(session_match.getSets().size() - 1);
+			}
+			
+			new ObjectMapper().writeValue(new File(PoloUtil.SPORTS_DIRECTORY + PoloUtil.POLO_DIRECTORY + PoloUtil.MATCHES_DIRECTORY + 
+					session_match.getMatchFileName()), session_match);
 			return JSONObject.fromObject(session_match).toString();
 			
 		case "LOG_SET":

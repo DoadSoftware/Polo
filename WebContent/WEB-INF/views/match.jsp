@@ -137,6 +137,7 @@
 			  </div> 
 		    <div class="form-group row row-bottom-margin ml-2" style="margin-bottom:5px;">
 			  <div id="select_event_div" style="display:none;"></div>
+			  <div id="select_player_div" style="display:none;"></div>
 			  <div id="select_set_div" style="display:none;"></div>
 			  <div id="polo_div" style="display:none;"></div>
            </div>

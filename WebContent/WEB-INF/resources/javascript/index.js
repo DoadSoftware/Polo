@@ -223,13 +223,16 @@ function processUserSelectionData(whatToProcess,dataToProcess){
 			processPoloProcedures('POPULATE-L3-SCOREUPDATE');
 			break;	
 			
-		case 'F6':
+		case 'F3': case 'F6':
 			$("#select_event_div").hide();
 			$("#select_set_div").hide();
 			$("#match_configuration").hide();
 			$("#polo_div").hide();
 			
 			switch (dataToProcess){
+			case 'F3':
+				addItemsToList('BUG_TEXT-OPTIONS',null); 
+				break;
 			case 'F6':
 				processPoloProcedures('BUG_DB_GRAPHICS-OPTIONS');
 				break;
@@ -344,6 +347,18 @@ function processUserSelection(whichInput)
 		processPoloProcedures('REPLACE',match_data);
 		break;
 		
+	case 'undo_set':
+		 processPoloProcedures('UNDO_SET');
+		break;
+		
+	case 'Overwrite_set':
+		addItemsToList('OVERWRITE_SET_OPTIONS',match_data);
+		break;
+	case 'log_setOverwrite_btn':
+		  processPoloProcedures('OVERWRITE_SET');
+		  $('#select_player_div').hide();
+		break;
+		
 	case 'start_set_btn':
 		match_data.sets.forEach(function(set){
 			if(set.set_status.toLowerCase() == 'start') {
@@ -385,6 +400,10 @@ function processUserSelection(whichInput)
 				break;
 			}
 		}
+		break;
+		
+	case 'cancel_event_btn_evn':
+		document.getElementById('select_player_div').style.display = 'none';
 		break;
 		
 	case 'cancel_match_setup_btn':
@@ -497,11 +516,14 @@ function processUserSelection(whichInput)
 		addItemsToList('POPULATE-ON_PLAYER',match_data);
 		break;
 	
-	case 'populate_bug_db_btn':		
+	case 'populate_bug_db_btn': case 'populate_bug_freetext_btn':
 		processWaitingButtonSpinner('START_WAIT_TIMER');
 		switch ($(whichInput).attr('name')) {
 		case 'populate_bug_db_btn':
 			processPoloProcedures('POPULATE-L3-BUG-DB');
+			break;
+		case 'populate_bug_freetext_btn':
+			processPoloProcedures('POPULATE-L3-BUG-FREETEXT');
 			break;
 		}
 		break;
@@ -578,6 +600,11 @@ function processPoloProcedures(whatToProcess, whichInput)
 		valueToProcess = $('#matchFileTimeStamp').val();
 		//alert("1");
 		break;
+		
+	case "OVERWRITE_SET":
+			value_to_process = document.getElementById("select_set").value + "," + document.getElementById("select_Winner").value+","+
+			+ document.getElementById("select_Homescore").value+ ","+document.getElementById("select_Awayscore").value;
+		break;
 			
 	case 'UPDATE_SCORE_USING_TXT':
 		value_to_process = document.getElementById("homeScore").value + "-" + document.getElementById("awayScore").value;
@@ -624,6 +651,14 @@ function processPoloProcedures(whatToProcess, whichInput)
 	case 'REPLACE':
 		value_to_process = $('#select_player option:selected').val() + ',' + $('#select_sub_player option:selected').val();
 		break;
+		
+	case 'POPULATE-L3-BUG-FREETEXT':
+		switch ($('#selectedBroadcaster').val()) {
+			case 'POLO':
+				value_to_process = $('#selectFreeText').val();
+				break;
+		}
+		break;
 	
 	case 'POPULATE-L3-BUG-DB':
 		switch ($('#selectedBroadcaster').val()) {
@@ -633,6 +668,7 @@ function processPoloProcedures(whatToProcess, whichInput)
 		}
 		break;
 	}
+		
 	
 	if(match_data){
 		if(whatToProcess != "LOAD_TEAMS"){
@@ -670,7 +706,7 @@ function processPoloProcedures(whatToProcess, whichInput)
 				break;
 				
 			case 'POPULATE-SCOREBUG': case 'POPULATE-SCOREBUG_WITHTIME': case 'POPULATE-L3-SCOREUPDATE': case 'POPULATE-L3-BUG-DB':
-			
+			case 'POPULATE-L3-BUG-FREETEXT':
 				if(confirm('Animate In?') == true){
 					switch(whatToProcess){
 					case 'POPULATE-SCOREBUG':
@@ -681,6 +717,9 @@ function processPoloProcedures(whatToProcess, whichInput)
 						break;
 					case 'POPULATE-L3-BUG-DB':
 						processPoloProcedures('ANIMATE-IN-BUG-DB');
+						break;
+					case 'POPULATE-L3-BUG-FREETEXT':
+						processPoloProcedures('ANIMATE-IN-BUG-FREETEXT');
 						break;
 					case 'POPULATE-L3-SCOREUPDATE':
 						processPoloProcedures('ANIMATE-IN-SCOREUPDATE');
@@ -695,7 +734,7 @@ function processPoloProcedures(whatToProcess, whichInput)
 				break;
 								
     		case 'LOG_OVERWRITE_MATCH_SUBS': case 'UNDO': case 'REPLACE': case 'LOG_GOALS': case 'UPDATE_SCORE_USING_TXT':
-    		case 'LOG_SET':
+    		case 'LOG_SET': case 'OVERWRITE_SET': case 'UNDO_SET':
         		addItemsToList('LOAD_MATCH',data);
 				addItemsToList('LOAD_EVENTS',data);
 				addItemsToList('LOAD_SET',data);
@@ -768,10 +807,143 @@ function addItemsToList(whatToProcess, dataToProcess)
 				}))
 			});
 		}
-		
 		break;
 		
-	case 'BUG_DB-OPTIONS':
+	case "OVERWRITE_SET_OPTIONS":
+		$('#select_player_div').empty();
+		
+		table = document.createElement('table');
+		table.setAttribute('class', 'table table-bordered');
+		
+		tbody = document.createElement('tbody');
+		row = tbody.insertRow(tbody.rows.length);
+		
+		let selection = document.createElement('select');
+		selection.id = 'select_set';
+		selection.name = selection.id;
+		
+		dataToProcess.sets.forEach(value => {
+		    if (value.set_status === "END") {  // only include sets with status "end"
+		        const option = document.createElement('option');
+		        option.value = value.set_number;
+		        option.text = "SET - " + value.set_number;
+		        selection.appendChild(option);
+		    }
+		});
+		header_text = document.createElement('label');
+		header_text.innerHTML = 'SET NUMBER: ';
+		header_text.htmlFor = selection.id;
+		selection.setAttribute('onchange', "processUserSelection(this)");
+		
+		row.insertCell(0).appendChild(header_text).appendChild(selection);
+		
+		select = document.createElement('select');
+		select.id = 'select_Winner';
+		select.name = select.id;
+		
+		option = document.createElement('option');
+		option.value = dataToProcess.homeTeamId;
+		option.text = dataToProcess.homeTeam.teamName1;
+		select.appendChild(option);
+		
+		option = document.createElement('option');
+		option.value = dataToProcess.awayTeamId;
+		option.text = dataToProcess.awayTeam.teamName1;
+		select.appendChild(option);
+		
+		header_text = document.createElement('label');
+		header_text.innerHTML = 'SELECT WINNER: ';
+		header_text.htmlFor = select.id;
+		row.insertCell(1).appendChild(header_text).appendChild(select);
+		
+		let homeInput = document.createElement('input');
+		homeInput.type = 'text';
+		homeInput.id = 'select_Homescore';
+		homeInput.name = homeInput.id;
+		homeInput.style = 'width:35%; height:50px; text-align:center; font-size:24px;';
+		homeInput.value = '0';
+		
+		header_text = document.createElement('label');
+		header_text.innerHTML = 'HOME SCORE: ';
+		header_text.htmlFor = homeInput.id;
+		row.insertCell(2).appendChild(header_text).appendChild(homeInput);
+		
+		let awayInput = document.createElement('input');
+		awayInput.type = 'text';
+		awayInput.id = 'select_Awayscore';
+		awayInput.name = awayInput.id;
+		awayInput.style = 'width:35%; height:50px; text-align:center; font-size:24px;';
+		awayInput.value = '0';
+		
+		header_text = document.createElement('label');
+		header_text.innerHTML = 'AWAY SCORE: ';
+		header_text.htmlFor = awayInput.id;
+		awayInput.setAttribute('onchange', "processUserSelection(this)");
+		row.insertCell(3).appendChild(header_text).appendChild(awayInput);
+		
+		selection.addEventListener('change', function() {
+		    var set = dataToProcess.sets.find(set => set.set_number === parseInt(this.value, 10));
+		    
+		    if (set) {
+		        $('#select_Homescore').val(set.homeScore);
+		        $('#select_Awayscore').val(set.awayScore);
+		        
+		        // Automatically select the winner based on setWinner
+		        if (set.set_winner === "home") {
+		            $('#select_Winner').val(dataToProcess.homeTeamId);
+		        } else if (set.set_winner === "away") {
+		            $('#select_Winner').val(dataToProcess.awayTeamId);
+		        }
+		    }
+		    $('#select_Homescore').trigger('change');
+		    $('#select_Awayscore').trigger('change');
+		    $('#select_Winner').trigger('change');
+		});
+		
+		div = document.createElement('div');
+		
+		let replaceBtn = document.createElement('input');
+		replaceBtn.type = 'button';
+		replaceBtn.name = 'log_setOverwrite_btn';
+		replaceBtn.id = replaceBtn.name;
+		replaceBtn.value = 'Save';
+		replaceBtn.style.backgroundColor = "green";
+		replaceBtn.style.color = "white";
+		replaceBtn.style.border = '2px solid #d4af37';
+		replaceBtn.style.padding = '10px 20px';
+		replaceBtn.style.borderRadius = '5px';
+		replaceBtn.style.boxShadow = '2px 4px 5px rgba(0, 0, 0, 0.2)';
+		replaceBtn.setAttribute('onclick', 'processUserSelection(this);');
+		
+		div.append(replaceBtn);
+		
+		let cancelBtn = document.createElement('input');
+		cancelBtn.type = 'button';
+		cancelBtn.name = 'cancel_event_btn_evn';
+		cancelBtn.id = cancelBtn.name;
+		cancelBtn.value = 'Cancel';
+		cancelBtn.style.backgroundColor = "red";
+		cancelBtn.style.color = "white";
+		cancelBtn.style.border = '2px solid #d4af37';
+		cancelBtn.style.padding = '10px 20px';
+		cancelBtn.style.borderRadius = '5px';
+		cancelBtn.style.boxShadow = '2px 4px 5px rgba(0, 0, 0, 0.2)';
+		cancelBtn.setAttribute('onclick', 'processUserSelection(this);');
+		
+		div.append(document.createElement('br'));
+		div.append(cancelBtn);
+		
+		row.insertCell(4).appendChild(div);
+		
+		table.appendChild(tbody);
+		document.getElementById('select_player_div').appendChild(table);
+		document.getElementById('select_player_div').style.display = '';
+				
+		selection.selectedIndex = 0;
+		selection.dispatchEvent(new Event('change'));
+    	break;
+		
+	case 'BUG_DB-OPTIONS': case 'BUG_TEXT-OPTIONS':
 	
 		switch ($('#selectedBroadcaster').val().toUpperCase()) {
 		case 'POLO':
@@ -808,6 +980,15 @@ function addItemsToList(whatToProcess, dataToProcess)
 				row.insertCell(cellCount).appendChild(select);
 				cellCount = cellCount + 1;
 				break;
+			case 'BUG_TEXT-OPTIONS':
+				select = document.createElement('input');
+				select.type = "text";
+				select.id = 'selectFreeText';
+				select.value = '';
+				
+				row.insertCell(cellCount).appendChild(select);
+				cellCount = cellCount + 1;
+				break;
 			}
 			
 			switch (whatToProcess) {
@@ -816,6 +997,17 @@ function addItemsToList(whatToProcess, dataToProcess)
 		    	option.type = 'button';
 				option.name = 'populate_bug_db_btn';
 			    option.value = 'Populate Bug';
+			    option.id = option.name;
+			    option.setAttribute('onclick',"processUserSelection(this)");
+			    
+			    div = document.createElement('div');
+			    div.append(option);
+				break;
+			case 'BUG_TEXT-OPTIONS':
+				option = document.createElement('input');
+		    	option.type = 'button';
+				option.name = 'populate_bug_freetext_btn';
+			    option.value = 'Populate Bug Free Text';
 			    option.id = option.name;
 			    option.setAttribute('onclick',"processUserSelection(this)");
 			    
@@ -1674,8 +1866,8 @@ function addItemsToList(whatToProcess, dataToProcess)
 	    const buttons = [
 	        { name: 'start_set_btn', value: 'Start Set', color: 'green' },
 	        { name: 'end_set_btn', value: 'End Set', color: 'red' },
-	        //{ name: 'undo_set', value: 'Undo Set', color: 'blue' },
-	        //{ name: 'Overwrite_set', value: 'Overwrite Set', color: 'blue' },
+	        { name: 'undo_set', value: 'Undo Set', color: 'blue' },
+	        { name: 'Overwrite_set', value: 'Overwrite Set', color: 'blue' },
 	        { name: 'reset_set_btn', value: 'Reset Set', color: 'black' }
 	    ];
 	
