@@ -14,7 +14,6 @@ import com.polo.containers.Scene;
 import com.polo.containers.ScoreBug;
 import com.polo.model.*;
 import com.polo.service.PoloService;
-import com.polo.util.PoloFunctions;
 import com.polo.util.PoloUtil;
 
 import net.sf.json.JSONArray;
@@ -27,10 +26,12 @@ public class POLO extends Scene{
 	public ScoreBug scorebug = new ScoreBug(); 
 	public String which_graphics_onscreen = "";
 	public boolean is_infobar = false;
+	public boolean is_infobar_time_on = false;
 	public String flag_scorebug_path = "IMAGE*/Default/Essentials/Flags_ScoreBug/";
 	public String flag_path = "IMAGE*/Default/Essentials/Flags/";
 	public String base_path = "IMAGE*/Default/Essentials/Base/";
 	public String text_path = "IMAGE*/Default/Essentials/Text/";
+	public String logo_path = "IMAGE*/Default/Design/";
 	private String status;
 	private String slashOrDash = "-";
 	public static List<String> penalties;
@@ -190,6 +191,7 @@ public class POLO extends Scene{
 		
 		switch (whatToProcess.toUpperCase()) {
 		case "POPULATE-SCOREBUG": case "POPULATE-SCOREBUG_WITHTIME": case "POPULATE-L3-BUG-FREETEXT": case "POPULATE-L3-BUG-DB": case "POPULATE-L3-SCOREUPDATE":
+		case "POPULATE-L3-NAMESUPER": case "POPULATE-L3-NAMESUPER-PLAYER":
 			
 			switch (whatToProcess.toUpperCase()) {
 			case "POPULATE-SCOREBUG": case "POPULATE-SCOREBUG_WITHTIME":
@@ -208,20 +210,29 @@ public class POLO extends Scene{
 			case "POPULATE-L3-SCOREUPDATE":
 				populateScoreUpdate(session_socket, PoloUtil.POLO_OVERLAYS, hockeyService,match,clock, session_selected_broadcaster);
 				break;
+			case "POPULATE-L3-NAMESUPER":
+				for(NameSuper ns : hockeyService.getNameSupers()) {
+				  if(ns.getNamesuperId() == Integer.valueOf(valueToProcess.split(",")[1])) {
+					  populateNameSuper(session_socket, PoloUtil.POLO_OVERLAYS, ns, match, session_selected_broadcaster);
+				  }
+				}
+				break;
+			case "POPULATE-L3-NAMESUPER-PLAYER":
+				populateNameSuperPlayer(session_socket, PoloUtil.POLO_OVERLAYS, Integer.valueOf(valueToProcess.split(",")[1]), valueToProcess.split(",")[2], 
+						Integer.valueOf(valueToProcess.split(",")[3]), match, session_selected_broadcaster);
+				break;
 			}
 			
 		case "NAMESUPER_GRAPHICS-OPTIONS": 
 			return JSONArray.fromObject(hockeyService.getNameSupers()).toString();
 		case "BUG_DB_GRAPHICS-OPTIONS":
 			return JSONArray.fromObject(hockeyService.getBugs()).toString();
-		case "STAFF_GRAPHICS-OPTIONS":
-			return JSONArray.fromObject(hockeyService.getStaffs()).toString();
-		case "PROMO_GRAPHICS-OPTIONS":
-			return JSONArray.fromObject(PoloFunctions.processAllFixtures(hockeyService)).toString();
 			
 		case "ANIMATE-IN-SCOREBUG": case "ANIMATE-IN-SCOREBUG_WITHTIME":
-		case "CLEAR-ALL": case "ANIMATE-OUT": 
-		case "ANIMATE-IN-BUG-DB": case "ANIMATE-IN-SCOREUPDATE": case "ANIMATE-IN-BUG-FREETEXT":
+		case "ANIMATE-IN-BUG-DB": case "ANIMATE-IN-SCOREUPDATE": case "ANIMATE-IN-BUG-FREETEXT": case "ANIMATE-IN-NAMESUPERDB":
+		case "ANIMATE-IN-NAMESUPER":
+			
+		case "CLEAR-ALL": case "ANIMATE-OUT": case "ANIMATE-OUT-SCOREBUG":
 			
 			switch (whatToProcess.toUpperCase()) {
 			case "ANIMATE-IN-BUG-DB":
@@ -233,29 +244,46 @@ public class POLO extends Scene{
 				which_graphics_onscreen = "BUG-FREETEXT";
 				break;
 			case "ANIMATE-IN-SCOREUPDATE":
-				processAnimation(session_socket, "anim__LT_Score", "START", session_selected_broadcaster,1);
+				processAnimation(session_socket, "anim__LT_Score$In_Out", "START", session_selected_broadcaster,1);
 				which_graphics_onscreen = "SCOREUPDATE";
 				break;
+			case "ANIMATE-IN-NAMESUPERDB":
+				processAnimation(session_socket, "anim_LT_NameSuper$In_Out", "START", session_selected_broadcaster,1);
+				which_graphics_onscreen = "NAMESUPERDB";
+				break;
+			case "ANIMATE-IN-NAMESUPER":
+				processAnimation(session_socket, "anim_LT_NameSuper$In_Out", "START", session_selected_broadcaster,1);
+				which_graphics_onscreen = "NAMESUPER";
+				break;
+				
 			case "ANIMATE-IN-SCOREBUG": case "ANIMATE-IN-SCOREBUG_WITHTIME":
 				processAnimation(session_socket, "anim_ScoreBug$EventLogo", "START", session_selected_broadcaster,1);
 				processAnimation(session_socket, "anim_ScoreBug$In_Out$Essentials", "START", session_selected_broadcaster,1);
 				
 				if(whatToProcess.equalsIgnoreCase("ANIMATE-IN-SCOREBUG_WITHTIME")) {
 					processAnimation(session_socket, "anim_ScoreBug$In_Out$Time", "START", session_selected_broadcaster,1);
+					is_infobar_time_on = true;
 				}
 				is_infobar = true;
 				scorebug.setScorebug_on_screen(true);
 				break;
 			case "CLEAR-ALL":
-				processAnimation(session_socket, "anim_ScoreBug", "SHOW 0.0", session_selected_broadcaster,1);
-				processAnimation(session_socket, "anim__LT_Score", "SHOW 0.0", session_selected_broadcaster,1);
-				processAnimation(session_socket, "anim_Bug", "SHOW 0.0", session_selected_broadcaster,1);
-				which_graphics_onscreen = "";
+				AnimateLogo(session_socket);
+				
+				is_infobar_time_on = false;
+				is_infobar = false;
+				scorebug.setScorebug_on_screen(false);
 				break;
 			
 			case "ANIMATE-OUT-SCOREBUG":
 				if(is_infobar == true) {
-					processAnimation(session_socket, "anim_ScoreBug", "CONTINUE", session_selected_broadcaster,1);
+					processAnimation(session_socket, "anim_ScoreBug$EventLogo", "CONTINUE REVERSE", session_selected_broadcaster,1);
+					processAnimation(session_socket, "anim_ScoreBug$In_Out$Essentials", "CONTINUE", session_selected_broadcaster,1);
+					if(is_infobar_time_on) {
+						processAnimation(session_socket, "anim_ScoreBug$In_Out$Time", "CONTINUE", session_selected_broadcaster,1);
+						is_infobar_time_on = false;
+					}
+					
 					is_infobar = false;
 					scorebug.setScorebug_on_screen(false);
 				}
@@ -264,6 +292,10 @@ public class POLO extends Scene{
 				switch(which_graphics_onscreen) {	
 				case "BUG-DB": case "BUG-FREETEXT":
 					processAnimation(session_socket, "anim_Bug$In_Out", "CONTINUE", session_selected_broadcaster,1);
+					which_graphics_onscreen = "";
+					break;
+				case "NAMESUPERDB": case "NAMESUPER":
+					processAnimation(session_socket, "anim_LT_NameSuper$In_Out", "CONTINUE", session_selected_broadcaster,1);
 					which_graphics_onscreen = "";
 					break;
 				case "SCOREUPDATE":
@@ -301,6 +333,7 @@ public class POLO extends Scene{
 	public void AnimateLogo(Socket session_socket) throws InterruptedException, IOException
 	{
 		processAnimation(session_socket, "anim_ScoreBug", "SHOW 0.0", session_selected_broadcaster,1);
+		processAnimation(session_socket, "anim_LT_NameSuper", "SHOW 0.0", session_selected_broadcaster,1);
 		processAnimation(session_socket, "anim__LT_Score", "SHOW 0.0", session_selected_broadcaster,1);
 		processAnimation(session_socket, "anim_Bug", "SHOW 0.0", session_selected_broadcaster,1);
 		which_graphics_onscreen = "";
@@ -437,6 +470,104 @@ public class POLO extends Scene{
 			}
 			
 			print_writer.println("-1 RENDERER PREVIEW SCENE*" + viz_scene + " C:/Temp/Preview.png anim__LT_Score$In_Out 0.900 anim__LT_Score$In_Out$In 0.900 \0");
+		}
+	}
+	
+	public void populateNameSuper(Socket session_socket, String viz_scene, NameSuper ns ,Match match, String selectedbroadcaster) throws InterruptedException, IOException
+	{
+		if (match == null) {
+			this.status = "ERROR: Match is null";
+		} else {
+			print_writer = new PrintWriter(session_socket.getOutputStream(), true);
+			
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Text$img_Text$txt_Name*GEOM*TEXT SET " + 
+					(ns.getFirstname() == null ? ns.getSurname() : (ns.getSurname() == null ? ns.getFirstname() : ns.getFirstname() + " " + ns.getSurname())) + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Text$img_Text$txt_Info*GEOM*TEXT SET " + 
+					(ns.getSubLine()==null ? " ":ns.getSubLine().toUpperCase()) + "\0");
+			
+			if(ns.getSponsor() == null) {
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$img_Base*TEXTURE*IMAGE SET " + base_path + "GEN" + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Text$img_Text*TEXTURE*IMAGE SET " + text_path + "GEN" + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Flag$Shadow*TEXTURE*IMAGE SET " + logo_path + "EventLogo" + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Flag$img_Flags*TEXTURE*IMAGE SET " + logo_path + "EventLogo" + "\0");
+			}else {
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$img_Base*TEXTURE*IMAGE SET " + base_path + ns.getSponsor() + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Text$img_Text*TEXTURE*IMAGE SET " + text_path + ns.getSponsor() + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Flag$Shadow*TEXTURE*IMAGE SET " + flag_path + ns.getSponsor() + "\0");
+				print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Flag$img_Flags*TEXTURE*IMAGE SET " + flag_path + ns.getSponsor() + "\0");
+			}
+			
+			print_writer.println("-1 RENDERER PREVIEW SCENE*" + viz_scene + " C:/Temp/Preview.png anim_LT_NameSuper$In_Out 0.600 anim_LT_NameSuper$In_Out$In 0.600 \0");
+		}
+	}
+	public void populateNameSuperPlayer(Socket session_socket, String viz_scene, int TeamId, String captainGoalKeeper, int playerId, Match match, String selectedbroadcaster) throws InterruptedException, IOException
+	{
+		if (match == null) {
+			this.status = "ERROR: Match is null";
+		} else {
+			
+			String Data = "";
+			Team team = null;
+			Player player = null;
+			
+			if(TeamId == match.getHomeTeamId()) {
+				team = match.getHomeTeam();
+				for(Player hs : match.getHomeSquad()) {
+					if(hs.getPlayerId() == playerId) {
+						player = hs;
+						break;
+					}
+				}
+				for(Player hsub : match.getHomeSubstitutes()) {
+					if(hsub.getPlayerId() == playerId) {
+						player = hsub;
+						break;
+					}
+				}
+			}else if(TeamId == match.getAwayTeamId()) {
+				team = match.getAwayTeam();
+				
+				for(Player as : match.getAwaySquad()) {
+					if(as.getPlayerId() == playerId) {
+						player = as;
+						break;
+					}
+				}
+				for(Player asub : match.getAwaySubstitutes()) {
+					if(asub.getPlayerId() == playerId) {
+						player = asub;
+						break;
+					}
+				}
+			}
+			
+			switch(captainGoalKeeper.toUpperCase()){
+			case "CAPTAIN":
+				Data = "CAPTAIN, " + team.getTeamName1();
+				break;
+			case "PLAYER OF THE MATCH":
+				Data = "PLAYER OF THE MATCH";
+				break;
+			case "GOAL_KEEPER":
+				Data = "GOALKEEPER, " + team.getTeamName1();
+				break;
+			case "CAPTAIN-GOALKEEPER":
+				Data = "CAPTAIN & GOALKEEPER, " + team.getTeamName1();
+				break;
+			case "PLAYER":
+				Data = team.getTeamName1();
+				break;
+			}
+			
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Text$img_Text$txt_Name*GEOM*TEXT SET " + player.getFull_name() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Text$img_Text$txt_Info*GEOM*TEXT SET " + Data + "\0");
+			
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$img_Base*TEXTURE*IMAGE SET " + base_path + team.getTeamName4() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Text$img_Text*TEXTURE*IMAGE SET " + text_path + team.getTeamName4() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Flag$Shadow*TEXTURE*IMAGE SET " + flag_path + team.getTeamName4() + "\0");
+			print_writer.println("-1 RENDERER*FRONT_LAYER*TREE*$gfx_LT_NameSuper$Subline$Team1$Flag$img_Flags*TEXTURE*IMAGE SET " + flag_path + team.getTeamName4() + "\0");
+			
+			print_writer.println("-1 RENDERER PREVIEW SCENE*" + viz_scene + " C:/Temp/Preview.png anim_LT_NameSuper$In_Out 0.600 anim_LT_NameSuper$In_Out$In 0.600 \0");	
 		}
 	}
 	

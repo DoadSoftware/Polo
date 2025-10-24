@@ -205,12 +205,22 @@ function processUserSelectionData(whatToProcess,dataToProcess){
 			processPoloProcedures('CLEAR-ALL');
 			break;	
 		case '=':
-			processPoloProcedures('ANIMATE-OUT-SCOREBUG');
+			if (confirm('Are You Sure To Animate Out?') == true) {
+	            processPoloProcedures('ANIMATE-OUT-SCOREBUG');
+	        }
 			break;
 		case '-': '189'
 			if(confirm('It will Also Delete Your Preview from Directory...\r\n\r\n Are You Sure To Animate Out?') == true){
 				processPoloProcedures('ANIMATE-OUT');
 			}
+			break;
+		case 'Escape':
+			$('#select_graphic_options_div').empty();
+			document.getElementById('select_graphic_options_div').style.display = 'none';
+			$("#select_event_div").show();
+			$("#select_set_div").show();
+			$("#match_configuration").show();
+			$("#polo_div").show();
 			break;
 			
 		case 'F1':
@@ -223,7 +233,7 @@ function processUserSelectionData(whatToProcess,dataToProcess){
 			processPoloProcedures('POPULATE-L3-SCOREUPDATE');
 			break;	
 			
-		case 'F3': case 'F6':
+		case 'F3': case 'F6': case 'F8': case 'F9':
 			$("#select_event_div").hide();
 			$("#select_set_div").hide();
 			$("#match_configuration").hide();
@@ -235,6 +245,13 @@ function processUserSelectionData(whatToProcess,dataToProcess){
 				break;
 			case 'F6':
 				processPoloProcedures('BUG_DB_GRAPHICS-OPTIONS');
+				break;
+			case 'F8':
+				processPoloProcedures('NAMESUPER_GRAPHICS-OPTIONS');
+				break;
+			case 'F9':
+				addItemsToList('NAMESUPER_PLAYER-OPTIONS',null);
+				addItemsToList('POPULATE-PLAYER',null);
 				break;
 			}
 			break;
@@ -516,7 +533,7 @@ function processUserSelection(whichInput)
 		addItemsToList('POPULATE-ON_PLAYER',match_data);
 		break;
 	
-	case 'populate_bug_db_btn': case 'populate_bug_freetext_btn':
+	case 'populate_bug_db_btn': case 'populate_bug_freetext_btn': case 'populate_namesuper_btn': case 'populate_namesuper_player_btn':
 		processWaitingButtonSpinner('START_WAIT_TIMER');
 		switch ($(whichInput).attr('name')) {
 		case 'populate_bug_db_btn':
@@ -524,6 +541,12 @@ function processUserSelection(whichInput)
 			break;
 		case 'populate_bug_freetext_btn':
 			processPoloProcedures('POPULATE-L3-BUG-FREETEXT');
+			break;
+		case 'populate_namesuper_btn':
+			processPoloProcedures('POPULATE-L3-NAMESUPER');
+			break;
+		case 'populate_namesuper_player_btn':
+			processPoloProcedures('POPULATE-L3-NAMESUPER-PLAYER');
 			break;
 		}
 		break;
@@ -659,7 +682,6 @@ function processPoloProcedures(whatToProcess, whichInput)
 				break;
 		}
 		break;
-	
 	case 'POPULATE-L3-BUG-DB':
 		switch ($('#selectedBroadcaster').val()) {
 			case 'POLO':
@@ -667,6 +689,21 @@ function processPoloProcedures(whatToProcess, whichInput)
 				break;
 		}
 		break;
+	case 'POPULATE-L3-NAMESUPER':
+		switch ($('#selectedBroadcaster').val()) {
+			case 'POLO':
+				value_to_process = $('#selectNameSuper option:selected').val() ;
+				break;
+		}
+	case 'POPULATE-L3-NAMESUPER-PLAYER':
+		switch ($('#selectedBroadcaster').val()) {
+			case 'POLO':
+				value_to_process = $('#selectTeam option:selected').val() + ',' + $('#selectCaptainGoalKeeper option:selected').val() 
+					+ ',' + $('#selectPlayer option:selected').val() ;
+				break;	
+		}
+		break;
+		
 	}
 		
 	
@@ -706,7 +743,7 @@ function processPoloProcedures(whatToProcess, whichInput)
 				break;
 				
 			case 'POPULATE-SCOREBUG': case 'POPULATE-SCOREBUG_WITHTIME': case 'POPULATE-L3-SCOREUPDATE': case 'POPULATE-L3-BUG-DB':
-			case 'POPULATE-L3-BUG-FREETEXT':
+			case 'POPULATE-L3-BUG-FREETEXT': case 'POPULATE-L3-NAMESUPER': case 'POPULATE-L3-NAMESUPER-PLAYER':
 				if(confirm('Animate In?') == true){
 					switch(whatToProcess){
 					case 'POPULATE-SCOREBUG':
@@ -724,13 +761,21 @@ function processPoloProcedures(whatToProcess, whichInput)
 					case 'POPULATE-L3-SCOREUPDATE':
 						processPoloProcedures('ANIMATE-IN-SCOREUPDATE');
 						break;
+					case 'POPULATE-L3-NAMESUPER':
+						processPoloProcedures('ANIMATE-IN-NAMESUPERDB');
+						break;
+					case 'POPULATE-L3-NAMESUPER-PLAYER':
+						processPoloProcedures('ANIMATE-IN-NAMESUPER');
+						break;
 					}
 				}
 				break;
 				
 			case 'BUG_DB_GRAPHICS-OPTIONS':
 				addItemsToList('BUG_DB-OPTIONS',data);
-				addItemsToList('POPULATE-BUG-SCENE',data);
+				break;
+			case 'NAMESUPER_GRAPHICS-OPTIONS':
+				addItemsToList('NAMESUPER-OPTIONS',data);
 				break;
 								
     		case 'LOG_OVERWRITE_MATCH_SUBS': case 'UNDO': case 'REPLACE': case 'LOG_GOALS': case 'UPDATE_SCORE_USING_TXT':
@@ -943,7 +988,7 @@ function addItemsToList(whatToProcess, dataToProcess)
 		selection.dispatchEvent(new Event('change'));
     	break;
 		
-	case 'BUG_DB-OPTIONS': case 'BUG_TEXT-OPTIONS':
+	case 'BUG_DB-OPTIONS': case 'BUG_TEXT-OPTIONS': case 'NAMESUPER-OPTIONS': case 'NAMESUPER_PLAYER-OPTIONS':
 	
 		switch ($('#selectedBroadcaster').val().toUpperCase()) {
 		case 'POLO':
@@ -989,32 +1034,112 @@ function addItemsToList(whatToProcess, dataToProcess)
 				row.insertCell(cellCount).appendChild(select);
 				cellCount = cellCount + 1;
 				break;
+			case'NAMESUPER-OPTIONS':
+				select = document.createElement('select');
+				select.style = 'width:130px';
+				select.id = 'selectNameSuper';
+				select.name = select.id;
+				
+				dataToProcess.forEach(function(ns,index,arr1){
+					option = document.createElement('option');
+					option.value = ns.namesuperId;
+					option.text = ns.subHeader ;
+					select.appendChild(option);
+				});
+				
+				row.insertCell(cellCount).appendChild(select);
+				cellCount = cellCount + 1;
+				break;
+			case 'NAMESUPER_PLAYER-OPTIONS':
+				select = document.createElement('select');
+				select.id = 'selectTeam';
+				select.name = select.id;
+				
+				option = document.createElement('option');
+				option.value = match_data.homeTeamId;
+				option.text = match_data.homeTeam.teamName1;
+				select.appendChild(option);
+				
+				option = document.createElement('option');
+				option.value = match_data.awayTeamId;
+				option.text = match_data.awayTeam.teamName1;
+				select.appendChild(option);
+			
+				select.setAttribute('onchange',"processUserSelection(this)");
+				row.insertCell(cellCount).appendChild(select);
+				cellCount = cellCount + 1;
+
+				select = document.createElement('select');
+				select.style = 'width:100px';
+				select.id = 'selectCaptainGoalKeeper';
+				select.name = select.id;
+				
+				option = document.createElement('option');
+				option.value = 'Player Of The Match';
+				option.text = 'Player Of The Match';
+				select.appendChild(option);
+				
+				option = document.createElement('option');
+				option.value = 'Player';
+				option.text = 'Player';
+				select.appendChild(option);
+				
+				option = document.createElement('option');
+				option.value = 'Captain';
+				option.text = 'Captain';
+				select.appendChild(option);
+				
+				option = document.createElement('option');
+				option.value = 'Captain-GoalKeeper';
+				option.text = 'Captain-GoalKeeper';
+				select.appendChild(option);
+				
+				option = document.createElement('option');
+				option.value = 'Goal_Keeper';
+				option.text = 'GoalKeeper';
+				select.appendChild(option);
+				
+				select.setAttribute('onchange',"processUserSelection(this)");
+				row.insertCell(cellCount).appendChild(select);
+				cellCount = cellCount + 1;
+				
+				select = document.createElement('select');
+				select.style = 'width:100px';
+				select.id = 'selectPlayer';
+				select.name = select.id;
+				
+				row.insertCell(cellCount).appendChild(select);
+				cellCount = cellCount + 1;
+				break;
 			}
 			
-			switch (whatToProcess) {
+			option = document.createElement('input');
+	    	option.type = 'button';
+	    	
+	    	switch (whatToProcess){
 			case 'BUG_DB-OPTIONS':
-				option = document.createElement('input');
-		    	option.type = 'button';
 				option.name = 'populate_bug_db_btn';
-			    option.value = 'Populate Bug';
-			    option.id = option.name;
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
+		   	 	option.value = 'Populate Bug';
 				break;
 			case 'BUG_TEXT-OPTIONS':
-				option = document.createElement('input');
-		    	option.type = 'button';
 				option.name = 'populate_bug_freetext_btn';
 			    option.value = 'Populate Bug Free Text';
-			    option.id = option.name;
-			    option.setAttribute('onclick',"processUserSelection(this)");
-			    
-			    div = document.createElement('div');
-			    div.append(option);
 				break;
+			case'NAMESUPER-OPTIONS':
+			    option.name = 'populate_namesuper_btn';
+			    option.value = 'Populate Namesuper';
+				break;
+			case 'NAMESUPER_PLAYER-OPTIONS':
+				option.name = 'populate_namesuper_player_btn';
+			    option.value = 'Populate Namesuper-Player';
+			    break;
 			}
+	    	
+		    option.id = option.name;
+		    option.setAttribute('onclick',"processUserSelection(this)");
+		    
+		    div = document.createElement('div');
+		    div.append(option);
 			
 			option = document.createElement('input');
 			option.type = 'button';
